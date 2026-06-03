@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🤖 MGM Agent - HubSpot</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+      width: 100%;
+      padding: 40px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .result.success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+    }
+
+    .result.error {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+    }
+
+    .result h3 {
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      font-size: 14px;
+    }
+
+    .result-item:last-child {
+      border-bottom: none;
+    }
+
+    .loading {
+      text-align: center;
+      display: none;
+      padding: 20px;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🤖 MGM Agent</h1>
+      <p>Processe indicações de forma automática</p>
+    </div>
+
+    <form id="form">
+      <div class="form-group">
+        <label for="phone">📞 Número de Telefone</label>
+        <input 
+          type="tel" 
+          id="phone" 
+          placeholder="11 98765-4321 ou +55 11 98765-4321"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="name">👤 Nome (opcional)</label>
+        <input 
+          type="text" 
+          id="name" 
+          placeholder="João Silva"
+        >
+      </div>
+
+      <button type="submit" id="submitBtn">🚀 Processar Indicação</button>
+    </form>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p style="margin-top: 15px; color: #666; font-size: 14px;">Processando...</p>
+    </div>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const phoneInput = document.getElementById('phone');
+    const nameInput = document.getElementById('name');
+    const submitBtn = document.getElementById('submitBtn');
+    const loading = document.getElementById('loading');
+    const resultDiv = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const phone = phoneInput.value.trim();
+      const name = nameInput.value.trim();
+
+      if (!phone) {
+        alert('Por favor, digite um número de telefone');
+        return;
+      }
+
+      // Mostrar loading
+      loading.style.display = 'block';
+      resultDiv.style.display = 'none';
+      submitBtn.disabled = true;
+
+      try {
+        const params = new URLSearchParams({
+          phone: phone,
+          ...(name && { name: name })
+        });
+
+        const response = await fetch(`http://localhost:3000/api/mgm?${params}`);
+        const data = await response.json();
+
+        // Esconder loading
+        loading.style.display = 'none';
+
+        if (data.status === 'success') {
+          showSuccess(data);
+        } else {
+          showError(data);
+        }
+
+      } catch (error) {
+        loading.style.display = 'none';
+        showError({
+          status: 'error',
+          message: `Erro ao conectar: ${error.message}. Certifique-se que o agente está rodando em http://localhost:3000`
+        });
+      }
+
+      submitBtn.disabled = false;
+    });
+
+    function showSuccess(data) {
+      resultDiv.className = 'result success';
+      resultDiv.innerHTML = `
+        <h3>✅ Sucesso!</h3>
+        <div class="result-item">
+          <span>Ação:</span>
+          <strong>${data.action === 'created' ? 'Criado' : 'Atualizado'}</strong>
+        </div>
+        <div class="result-item">
+          <span>Contact ID:</span>
+          <strong>${data.contact_id}</strong>
+        </div>
+        ${data.deal_id ? `
+          <div class="result-item">
+            <span>Deal ID:</span>
+            <strong>${data.deal_id}</strong>
+          </div>
+        ` : ''}
+        <div class="result-item">
+          <span>Telefone:</span>
+          <strong>${data.phone}</strong>
+        </div>
+        <div class="result-item">
+          <span>Score:</span>
+          <strong>${data.confidence_score}/100</strong>
+        </div>
+      `;
+      resultDiv.style.display = 'block';
+    }
+
+    function showError(data) {
+      resultDiv.className = 'result error';
+      resultDiv.innerHTML = `
+        <h3>❌ Erro</h3>
+        <div class="result-item">
+          <span>${data.message || 'Erro desconhecido'}</span>
+        </div>
+      `;
+      resultDiv.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
