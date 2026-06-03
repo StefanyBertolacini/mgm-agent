@@ -8,6 +8,18 @@ const axios = require('axios');
 const phonenumbers = require('google-libphonenumber');
 
 const app = express();
+// Enable CORS
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
 const PORT = process.env.PORT || 3000;
 
 // ============================================
@@ -132,7 +144,6 @@ async function createContact(phoneNormalized, name) {
         contact_mgm_indicator_phone: phoneNormalized,
         contact_mgm_indicator_count: '1',
         contact_mgm_matching_confidence: 'High',
-        lifecycleStage: 'subscriber'
       }
     }, { headers: hubspotHeaders });
     
@@ -179,23 +190,10 @@ async function createDeal(contactId, phoneNormalized, confidenceScore) {
     const response = await axios.post(url, {
       properties: {
         dealname: `MGM - ${phoneNormalized}`,
-        pipeline: 'mgm_indications_pipeline',
-        dealstage: 'indication_received',
-        mgm_indication_date: new Date().toISOString().split('T')[0],
-        mgm_phone_used: phoneNormalized,
-        mgm_confidence_score: confidenceScore.toString()
-      },
-      associations: [
-        {
-          types: [
-            {
-              associationCategory: 'HUBSPOT_DEFINED',
-              associationTypeId: 1
-            }
-          ],
-          id: contactId
-        }
-      ]
+        pipeline: '904463895',
+        deal_mgm_phone_normalized: phoneNormalized,
+        dealstage: '1372198928'
+      }
     }, { headers: hubspotHeaders });
     
     const dealId = response.data.id;
@@ -213,11 +211,28 @@ async function createDeal(contactId, phoneNormalized, confidenceScore) {
  */
 async function linkContactToDeal(contactId, dealId) {
   try {
-    await updateContact(contactId, {
-      contact_mgm_primary_deal_id: dealId
-    });
+    console.log(`🔗 Vinculando deal ${dealId} ao contato ${contactId}`);
+    
+    const url = `${HUBSPOT_API_URL}/crm/v3/objects/deals/${dealId}/associations/contacts/${contactId}`;
+    
+    await axios.delete(url, { headers: hubspotHeaders });
+    
+    const associateUrl = `${HUBSPOT_API_URL}/crm/v3/objects/deals/${dealId}/associations/contacts/${contactId}`;
+    
+    await axios.put(associateUrl, {
+      data: [
+        {
+          associationCategory: 'HUBSPOT_DEFINED',
+          associationTypeId: 1
+        }
+      ]
+    }, { headers: hubspotHeaders });
+    
+    console.log(`✅ Deal vinculado ao contato`);
+    
   } catch (err) {
-    console.error('⚠️ Erro ao linkar deal ao contato:', err.message);
+    console.warn('⚠️ Aviso ao vincular deal (não crítico):', err.message);
+    // Continuar mesmo se falhar
   }
 }
 
@@ -280,7 +295,6 @@ async function processarIndicacao(phoneRaw, name = null) {
     let dealId = null;
     if (action === 'created') {
       dealId = await createDeal(contactId, phoneNormalized, confidenceScore);
-      await linkContactToDeal(contactId, dealId);
     }
     
     console.log();
@@ -310,6 +324,166 @@ async function processarIndicacao(phoneRaw, name = null) {
 // ============================================
 // ENDPOINTS
 // ============================================
+
+/**
+ * POST /api/mgm/webhook
+ * Recebe webhook do HubSpot quando contato é criado/atualizado
+ */
+app.post('/api/mgm/webhook', async (req, res) => {
+  try {
+    console.log(`\n🔔 WEBHOOK RECEBIDO DO HUBSPOT`);
+    console.log(`📦 Payload:`, JSON.stringify(req.body, null, 2));
+    
+    // HubSpot envia array de eventos
+    const events = req.body;
+    
+    if (!Array.isArray(events) || events.length === 0) {
+      return res.status(200).json({ status: 'ok', processed: 0 });
+    }
+    
+    let processed = 0;
+    
+    for (const event of events) {
+      try {
+        const contactId = event.objectId;
+        const propertyName = event.propertyName;
+        const propertyValue = event.propertyValue;
+        
+        console.log(`\n📋 Evento: contactId=${contactId}, property=${propertyName}`);
+        
+        // Só processa se é a propriedade de phone
+        if (propertyName !== 'phone' && propertyName !== 'hs_lead_status') {
+          console.log(`⏭️ Ignorando propriedade: ${propertyName}`);
+          continue;
+        }
+        
+        // Buscar contato completo no HubSpot
+        const url = `${HUBSPOT_API_URL}/crm/v3/objects/contacts/${contactId}`;
+        const contactResponse = await axios.get(url, { headers: hubspotHeaders });
+        const phone = contactResponse.data.properties?.phone;
+        
+        if (!phone) {
+          console.log(`⚠️ Contato ${contactId} sem telefone`);
+          continue;
+        }
+        
+        console.log(`📞 Telefone encontrado: ${phone}`);
+        
+        // Normalizar telefone
+        const phoneNormalized = normalizePhone(phone);
+        if (!phoneNormalized) {
+          console.log(`⚠️ Telefone inválido: ${phone}`);
+          continue;
+        }
+        
+        console.log(`✅ Telefone normalizado: ${phoneNormalized}`);
+        
+        // Buscar deal MGM
+        const dealId = await linkMGMDealToSignup(phoneNormalized);
+        
+        if (dealId) {
+          console.log(`🎉 SUCESSO! Deal MGM encontrado e será vinculado: ${dealId}`);
+          // [FASE 2] Aqui você vincularia o contato ao deal
+          // await associateContactToDeal(contactId, dealId);
+        } else {
+          console.log(`ℹ️ Nenhum deal MGM encontrado para ${phoneNormalized}`);
+        }
+        
+        processed++;
+        
+      } catch (eventErr) {
+        console.error(`❌ Erro ao processar evento:`, eventErr.message);
+      }
+    }
+    
+    console.log(`\n✅ Webhook processado. ${processed} evento(s) tratado(s)\n`);
+    res.status(200).json({ 
+      status: 'ok', 
+      processed: processed,
+      message: `${processed} evento(s) processado(s)`
+    });
+    
+  } catch (err) {
+    console.error(`❌ Erro no webhook:`, err.message);
+    res.status(500).json({ 
+      status: 'error', 
+      message: err.message 
+    });
+  }
+});
+
+/**
+ * GET /api/mgm/link-signup
+ * Testa se consegue encontrar deal MGM por telefone
+ */
+app.get('/api/mgm/link-signup', async (req, res) => {
+  const { phone, contactId } = req.query;
+  
+  if (!phone) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Parâmetro "phone" obrigatório. Exemplo: /api/mgm/link-signup?phone=11987654321&contactId=123'
+    });
+  }
+  
+  const phoneNormalized = normalizePhone(phone);
+  if (!phoneNormalized) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Telefone inválido'
+    });
+  }
+  
+  const dealId = await linkMGMDealToSignup(phoneNormalized);
+  
+  res.json({
+    status: 'ok',
+    phone: phoneNormalized,
+    dealFound: dealId !== null,
+    dealId: dealId,
+    message: dealId ? 'Deal MGM encontrado!' : 'Nenhum deal MGM encontrado'
+  });
+});
+
+
+/**
+ * Vincula deal MGM a um contato que fez signup
+ */
+async function linkMGMDealToSignup(phoneNormalized) {
+  try {
+    console.log(`🔗 Buscando deal MGM para ${phoneNormalized}`);
+    
+    const url = `${HUBSPOT_API_URL}/crm/v3/objects/deals/search`;
+    
+    const response = await axios.post(url, {
+      filterGroups: [
+        {
+          filters: [
+            {
+              propertyName: 'deal_mgm_phone_normalized',
+              operator: 'EQ',
+              value: phoneNormalized
+            }
+          ]
+        }
+      ],
+      limit: 1
+    }, { headers: hubspotHeaders });
+    
+    if (response.data.results && response.data.results.length > 0) {
+      const dealId = response.data.results[0].id;
+      console.log(`✅ Deal MGM encontrado: ${dealId}`);
+      return dealId;
+    }
+    
+    console.log(`ℹ️ Nenhum deal MGM encontrado`);
+    return null;
+    
+  } catch (err) {
+    console.error('⚠️ Erro ao buscar deal:', err.message);
+    return null;
+  }
+}
 
 /**
  * POST /api/mgm
