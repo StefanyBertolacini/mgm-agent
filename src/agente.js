@@ -60,19 +60,16 @@ app.use(express.json());
  */
 function normalizePhone(phoneRaw) {
   try {
-    if (!phoneRaw) return null;
+    // Remove espaços e hífens
+    const cleaned = phoneRaw.replace(/[\s\-]/g, '');
     
-    const parsed = phoneUtil.parse(phoneRaw, 'BR');
-    if (!phoneUtil.isValidNumber(parsed)) {
-      return null;
-    }
+    // Parsear com google-libphonenumber
+    const parsed = phoneUtil.parseAndKeepRawInput(cleaned, 'BR');
     
-    return phoneUtil.format(
-      parsed,
-      phonenumbers.PhoneNumberFormat.E164
-    );
+    // Retornar em formato E164 (sem hífens)
+    return phoneUtil.format(parsed, PNF.E164);
   } catch (err) {
-    console.log(`⚠️ Erro ao normalizar telefone "${phoneRaw}":`, err.message);
+    console.error(`⚠️ Erro ao normalizar: ${phoneRaw}`, err.message);
     return null;
   }
 }
@@ -136,7 +133,7 @@ async function createContact(phoneNormalized, name) {
     
     const response = await axios.post(url, {
       properties: {
-        firstname: name || 'Unknown',
+        firstname: name || `Indicação MGM - ${phoneNormalized}`,
         phone: phoneNormalized,
         contact_mgm_phone_normalized: phoneNormalized,
         contact_mgm_indicator_received: 'true',
@@ -379,14 +376,11 @@ app.post('/api/mgm/webhook', async (req, res) => {
         console.log(`✅ Telefone normalizado: ${phoneNormalized}`);
         
         // Buscar deal MGM
-        const dealId = await linkMGMDealToSignup(phoneNormalized);
-        
-        if (dealId) {
-          console.log(`🎉 SUCESSO! Deal MGM encontrado e será vinculado: ${dealId}`);
-          // [FASE 2] Aqui você vincularia o contato ao deal
-          // await associateContactToDeal(contactId, dealId);
+        const result = await linkMGMDealToSignup(phoneNormalized, contactId);
+        if (result.found) {
+            console.log(`🎉 Contatos associados! MGM: ${result.mgmContactId}, Signup: ${result.signupContactId}`);
         } else {
-          console.log(`ℹ️ Nenhum deal MGM encontrado para ${phoneNormalized}`);
+            console.log(`ℹ️ Nenhum contato MGM encontrado para ${phoneNormalized}`);
         }
         
         processed++;
@@ -449,20 +443,25 @@ app.get('/api/mgm/link-signup', async (req, res) => {
 /**
  * Vincula deal MGM a um contato que fez signup
  */
-async function linkMGMDealToSignup(phoneNormalized) {
+async function linkMGMDealToSignup(phoneNormalized, signupContactId) {
   try {
-    console.log(`🔗 Buscando deal MGM para ${phoneNormalized}`);
+    console.log(`🔗 Buscando contato MGM para associar: ${phoneNormalized}`);
     
-    const url = `${HUBSPOT_API_URL}/crm/v3/objects/deals/search`;
+    const url = `${HUBSPOT_API_URL}/crm/v3/objects/contacts/search`;
     
+    const phoneForSearch = phoneNormalized.replace(/[\s\-]/g, '');
+    
+    console.log(`📞 Telefone para busca (sem hífens): ${phoneForSearch}`);
+
+    // Buscar CONTATO A (que foi criado via indicação MGM)
     const response = await axios.post(url, {
       filterGroups: [
         {
           filters: [
             {
-              propertyName: 'deal_mgm_phone_normalized',
+              propertyName: 'contact_mgm_phone_normalized',
               operator: 'EQ',
-              value: phoneNormalized
+              value: phoneForSearch
             }
           ]
         }
@@ -471,17 +470,63 @@ async function linkMGMDealToSignup(phoneNormalized) {
     }, { headers: hubspotHeaders });
     
     if (response.data.results && response.data.results.length > 0) {
-      const dealId = response.data.results[0].id;
-      console.log(`✅ Deal MGM encontrado: ${dealId}`);
-      return dealId;
+      const mgmContactId = response.data.results[0].id;
+      console.log(`✅ Contato MGM encontrado: ${mgmContactId}`);
+      
+      // 1. ASSOCIAR CONTATO B ao CONTATO A
+      try {
+        console.log(`🔗 Associando contato ${signupContactId} ao contato MGM ${mgmContactId}`);
+        
+        const associateUrl = `${HUBSPOT_API_URL}/crm/v3/objects/contacts/${signupContactId}/associations/contacts/${mgmContactId}`;
+        
+        await axios.put(associateUrl, [
+          {
+            associationCategory: 'HUBSPOT_DEFINED',
+            associationTypeId: 1  // Related contact
+          }
+        ], { headers: hubspotHeaders });
+        
+        console.log(`✅ Contatos associados`);
+      } catch (assocErr) {
+        console.warn('⚠️ Aviso ao associar contatos:', assocErr.message);
+      }
+      
+      // 2. MARCAR CONTATO B COM PROPRIEDADES MGM
+      try {
+        console.log(`📝 Marcando contato ${signupContactId} como MGM`);
+        
+        const updateUrl = `${HUBSPOT_API_URL}/crm/v3/objects/contacts/${signupContactId}`;
+        
+        await axios.patch(updateUrl, {
+          properties: {
+            contact_mgm_phone_normalized: phoneNormalized,
+            contact_mgm_indicator_received: 'true',
+            contact_mgm_indicator_date: new Date().toISOString().split('T')[0],
+            contact_mgm_matching_confidence: 'High',
+            contact_mgm_signup_confirmed: 'true',
+            contact_mgm_signup_date: new Date().toISOString().split('T')[0]
+          }
+        }, { headers: hubspotHeaders });
+        
+        console.log(`✅ Contato marcado como MGM + Signup confirmado`);
+      } catch (updateErr) {
+        console.warn('⚠️ Aviso ao marcar contato MGM:', updateErr.message);
+      }
+      
+      return {
+        found: true,
+        mgmContactId: mgmContactId,
+        signupContactId: signupContactId,
+        associated: true
+      };
     }
     
-    console.log(`ℹ️ Nenhum deal MGM encontrado`);
-    return null;
+    console.log(`ℹ️ Nenhum contato MGM encontrado para este telefone`);
+    return { found: false };
     
   } catch (err) {
-    console.error('⚠️ Erro ao buscar deal:', err.message);
-    return null;
+    console.error('⚠️ Erro ao buscar/associar contato MGM:', err.message);
+    return { found: false };
   }
 }
 

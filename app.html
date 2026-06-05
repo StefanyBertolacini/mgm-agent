@@ -25,14 +25,14 @@
       background: white;
       border-radius: 12px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      max-width: 500px;
+      max-width: 600px;
       width: 100%;
       padding: 40px;
     }
 
     .header {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 30px;
     }
 
     .header h1 {
@@ -58,23 +58,38 @@
       font-size: 14px;
     }
 
-    input {
+    textarea {
       width: 100%;
-      padding: 12px;
+      padding: 15px;
       border: 2px solid #e0e0e0;
       border-radius: 8px;
       font-size: 14px;
+      font-family: 'Courier New', monospace;
+      resize: vertical;
+      min-height: 200px;
       transition: border-color 0.3s;
     }
 
-    input:focus {
+    textarea:focus {
       outline: none;
       border-color: #667eea;
     }
 
-    button {
-      width: 100%;
-      padding: 12px;
+    .hint {
+      font-size: 12px;
+      color: #999;
+      margin-top: 5px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 30px;
+    }
+
+    button.submit-btn {
+      flex: 1;
+      padding: 14px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border: none;
@@ -85,56 +100,39 @@
       transition: transform 0.2s;
     }
 
-    button:hover {
+    button.submit-btn:hover {
       transform: translateY(-2px);
     }
 
-    button:disabled {
+    button.submit-btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
       transform: none;
     }
 
-    .result {
-      margin-top: 30px;
-      padding: 20px;
+    button.clear-btn {
+      padding: 14px 20px;
+      background: #e0e0e0;
+      color: #333;
+      border: none;
       border-radius: 8px;
-      display: none;
-    }
-
-    .result.success {
-      background: #d4edda;
-      border: 1px solid #c3e6cb;
-      color: #155724;
-    }
-
-    .result.error {
-      background: #f8d7da;
-      border: 1px solid #f5c6cb;
-      color: #721c24;
-    }
-
-    .result h3 {
-      margin-bottom: 10px;
-      font-size: 16px;
-    }
-
-    .result-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
       font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
     }
 
-    .result-item:last-child {
-      border-bottom: none;
+    button.clear-btn:hover {
+      background: #d0d0d0;
     }
 
     .loading {
       text-align: center;
-      display: none;
       padding: 20px;
+      display: none;
+    }
+
+    .loading.show {
+      display: block;
     }
 
     .spinner {
@@ -144,12 +142,54 @@
       width: 40px;
       height: 40px;
       animation: spin 1s linear infinite;
-      margin: 0 auto;
+      margin: 0 auto 10px;
     }
 
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
+    }
+
+    .results {
+      margin-top: 30px;
+      display: none;
+    }
+
+    .results.show {
+      display: block;
+    }
+
+    .result-item {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border-left: 4px solid #667eea;
+      font-size: 13px;
+    }
+
+    .result-item.success {
+      background: #d4edda;
+      border-left-color: #28a745;
+      color: #155724;
+    }
+
+    .result-item.error {
+      background: #f8d7da;
+      border-left-color: #dc3545;
+      color: #721c24;
+    }
+
+    .summary {
+      margin-top: 15px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .summary strong {
+      color: #667eea;
     }
   </style>
 </head>
@@ -157,133 +197,140 @@
   <div class="container">
     <div class="header">
       <h1>🤖 MGM Agent</h1>
-      <p>Processe indicações de forma automática</p>
+      <p>Processe múltiplas indicações em lote</p>
     </div>
 
     <form id="form">
       <div class="form-group">
-        <label for="phone">📞 Número de Telefone</label>
-        <input 
-          type="tel" 
-          id="phone" 
-          placeholder="11 98765-4321 ou +55 11 98765-4321"
+        <label for="phones">📞 Telefones</label>
+        <textarea 
+          id="phones"
+          placeholder="Cole um telefone por linha:&#10;11 98765-4321&#10;21 99999-8888&#10;85 98765-4321&#10;&#10;Ou com nome (opcional):&#10;11 98765-4321 - João Silva&#10;21 99999-8888 - Maria Santos"
           required
-        >
+        ></textarea>
+        <div class="hint">Um telefone por linha. Opcionalmente coloque " - Nome" após o telefone.</div>
       </div>
 
-      <div class="form-group">
-        <label for="name">👤 Nome (opcional)</label>
-        <input 
-          type="text" 
-          id="name" 
-          placeholder="João Silva"
-        >
+      <div class="button-group">
+        <button type="submit" class="submit-btn">🚀 Processar</button>
+        <button type="button" class="clear-btn" onclick="clearForm()">Limpar</button>
       </div>
-
-      <button type="submit" id="submitBtn">🚀 Processar Indicação</button>
     </form>
 
     <div class="loading" id="loading">
       <div class="spinner"></div>
-      <p style="margin-top: 15px; color: #666; font-size: 14px;">Processando...</p>
+      <p>Processando indicações...</p>
     </div>
 
-    <div class="result" id="result"></div>
+    <div class="results" id="results">
+      <h3>📊 Resultados</h3>
+      <div id="resultsList"></div>
+      <div class="summary" id="summary"></div>
+    </div>
   </div>
 
   <script>
     const form = document.getElementById('form');
-    const phoneInput = document.getElementById('phone');
-    const nameInput = document.getElementById('name');
-    const submitBtn = document.getElementById('submitBtn');
+    const phonesTextarea = document.getElementById('phones');
     const loading = document.getElementById('loading');
-    const resultDiv = document.getElementById('result');
+    const results = document.getElementById('results');
+    const resultsList = document.getElementById('resultsList');
+    const summary = document.getElementById('summary');
+
+    function clearForm() {
+      form.reset();
+      results.classList.remove('show');
+      resultsList.innerHTML = '';
+      summary.innerHTML = '';
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const phone = phoneInput.value.trim();
-      const name = nameInput.value.trim();
-
-      if (!phone) {
-        alert('Por favor, digite um número de telefone');
+      const text = phonesTextarea.value.trim();
+      if (!text) {
+        alert('Cole pelo menos um telefone!');
         return;
       }
 
-      // Mostrar loading
-      loading.style.display = 'block';
-      resultDiv.style.display = 'none';
-      submitBtn.disabled = true;
+      // Parsear linhas
+      const lines = text.split('\n').filter(line => line.trim());
+      const indicacoes = [];
 
-      try {
-        const params = new URLSearchParams({
-          phone: phone,
-          ...(name && { name: name })
-        });
-
-        const response = await fetch(`http://localhost:3000/api/mgm?${params}`);
-        const data = await response.json();
-
-        // Esconder loading
-        loading.style.display = 'none';
-
-        if (data.status === 'success') {
-          showSuccess(data);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        
+        // Verificar se tem " - " para separar telefone e nome
+        if (trimmed.includes(' - ')) {
+          const [phone, name] = trimmed.split(' - ').map(x => x.trim());
+          if (phone) indicacoes.push({ phone, name: name || null });
         } else {
-          showError(data);
+          if (trimmed) indicacoes.push({ phone: trimmed, name: null });
         }
-
-      } catch (error) {
-        loading.style.display = 'none';
-        showError({
-          status: 'error',
-          message: `Erro ao conectar: ${error.message}. Certifique-se que o agente está rodando em http://localhost:3000`
-        });
       }
 
-      submitBtn.disabled = false;
+      if (indicacoes.length === 0) {
+        alert('Cole pelo menos um telefone válido!');
+        return;
+      }
+
+      loading.classList.add('show');
+      results.classList.remove('show');
+      resultsList.innerHTML = '';
+
+      try {
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const ind of indicacoes) {
+          try {
+            const params = new URLSearchParams({
+              phone: ind.phone,
+              ...(ind.name && { name: ind.name })
+            });
+
+            const response = await fetch(`http://localhost:3000/api/mgm?${params}`);
+            const data = await response.json();
+
+            const resultItem = document.createElement('div');
+
+            if (data.status === 'success') {
+              successCount++;
+              resultItem.className = 'result-item success';
+              resultItem.innerHTML = `
+                ✅ <strong>${ind.name || ind.phone}</strong> - ${data.action === 'created' ? 'Criado' : 'Atualizado'} (ID: ${data.contact_id})
+              `;
+            } else {
+              errorCount++;
+              resultItem.className = 'result-item error';
+              resultItem.innerHTML = `
+                ❌ <strong>${ind.phone}</strong> - ${data.message}
+              `;
+            }
+
+            resultsList.appendChild(resultItem);
+
+          } catch (error) {
+            errorCount++;
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item error';
+            resultItem.innerHTML = `
+              ❌ <strong>${ind.phone}</strong> - Erro: ${error.message}
+            `;
+            resultsList.appendChild(resultItem);
+          }
+        }
+
+        summary.innerHTML = `
+          <strong>Resumo:</strong> ${successCount} ✅ sucesso(s), ${errorCount} ❌ erro(s) de ${indicacoes.length} total(is)
+        `;
+
+        results.classList.add('show');
+
+      } finally {
+        loading.classList.remove('show');
+      }
     });
-
-    function showSuccess(data) {
-      resultDiv.className = 'result success';
-      resultDiv.innerHTML = `
-        <h3>✅ Sucesso!</h3>
-        <div class="result-item">
-          <span>Ação:</span>
-          <strong>${data.action === 'created' ? 'Criado' : 'Atualizado'}</strong>
-        </div>
-        <div class="result-item">
-          <span>Contact ID:</span>
-          <strong>${data.contact_id}</strong>
-        </div>
-        ${data.deal_id ? `
-          <div class="result-item">
-            <span>Deal ID:</span>
-            <strong>${data.deal_id}</strong>
-          </div>
-        ` : ''}
-        <div class="result-item">
-          <span>Telefone:</span>
-          <strong>${data.phone}</strong>
-        </div>
-        <div class="result-item">
-          <span>Score:</span>
-          <strong>${data.confidence_score}/100</strong>
-        </div>
-      `;
-      resultDiv.style.display = 'block';
-    }
-
-    function showError(data) {
-      resultDiv.className = 'result error';
-      resultDiv.innerHTML = `
-        <h3>❌ Erro</h3>
-        <div class="result-item">
-          <span>${data.message || 'Erro desconhecido'}</span>
-        </div>
-      `;
-      resultDiv.style.display = 'block';
-    }
   </script>
 </body>
 </html>
