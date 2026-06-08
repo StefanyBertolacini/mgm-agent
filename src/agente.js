@@ -36,6 +36,7 @@ if (!HUBSPOT_API_KEY) {
 
 const HUBSPOT_API_URL = 'https://api.hubapi.com';
 const phoneUtil = phonenumbers.PhoneNumberUtil.getInstance();
+const PNF = phonenumbers.PhoneNumberFormat;
 
 // Headers para HubSpot API
 const hubspotHeaders = {
