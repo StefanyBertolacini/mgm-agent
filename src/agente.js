@@ -60,14 +60,22 @@ app.use(express.json());
  */
 function normalizePhone(phoneRaw) {
   try {
+    // Se já estiver em formato E164, retorna direto
+    if (phoneRaw && phoneRaw.startsWith('+') && phoneRaw.length > 10) {
+      console.log(`✅ Telefone já normalizado: ${phoneRaw}`);
+      return phoneRaw;
+    }
+    
     // Remove espaços e hífens
     const cleaned = phoneRaw.replace(/[\s\-]/g, '');
     
     // Parsear com google-libphonenumber
     const parsed = phoneUtil.parseAndKeepRawInput(cleaned, 'BR');
     
-    // Retornar em formato E164 (sem hífens)
-    return phoneUtil.format(parsed, PNF.E164);
+    // Retornar em formato E164
+    const formatted = phoneUtil.format(parsed, PNF.E164);
+    console.log(`✅ Telefone normalizado: ${formatted}`);
+    return formatted;
   } catch (err) {
     console.error(`⚠️ Erro ao normalizar: ${phoneRaw}`, err.message);
     return null;
