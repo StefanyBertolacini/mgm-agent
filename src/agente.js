@@ -1,5 +1,5 @@
 // ============================================
-// MGM AGENT - Processador de Indicações (CORRIGIDO)
+// MGM AGENT - Processador de Indicações
 // ============================================
 
 require('dotenv').config();
@@ -7,6 +7,7 @@ const express = require('express');
 const axios = require('axios');
 
 const app = express();
+
 // Enable CORS
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -19,6 +20,9 @@ app.use((req, res, next) => {
   
   next();
 });
+
+app.use(express.json());
+
 const PORT = process.env.PORT || 3000;
 
 // ============================================
@@ -42,26 +46,20 @@ const hubspotHeaders = {
 };
 
 // ============================================
-// MIDDLEWARE
-// ============================================
-
-app.use(express.json());
-
-// ============================================
 // FUNÇÕES AUXILIARES
 // ============================================
 
 /**
- * Normaliza telefone para formato padrão E.164
+ * Normaliza telefone para formato padrão
  * Input: "11 98765-4321", "+55 11 98765-4321", "554799999999"
- * Output: "+5554799999999"
+ * Output: "+5554799999999" ou "11987654321"
  */
 function normalizePhone(phoneRaw) {
   if (!phoneRaw) return null;
   
   try {
-   // Remove TUDO exceto números
-   let cleaned = phoneRaw.replace(/\D/g, '');
+    // Remove TUDO exceto números e +
+    let cleaned = phoneRaw.replace(/[^\d+]/g, '');
     
     // Remove o + se existir (para padronização)
     if (cleaned.startsWith('+')) {
@@ -76,11 +74,7 @@ function normalizePhone(phoneRaw) {
     // Se não tem código de país (55 para Brasil), adiciona
     if (!cleaned.startsWith('55')) {
       // Assumindo Brasil como padrão
-      if (cleaned.length === 11) {
-        // Telefone brasileiro sem código país
-        cleaned = '55' + cleaned;
-      } else if (cleaned.length === 10) {
-        // Telefone brasileiro antigo
+      if (cleaned.length === 11 || cleaned.length === 10) {
         cleaned = '55' + cleaned;
       }
     }
@@ -100,9 +94,9 @@ function normalizePhone(phoneRaw) {
 /**
  * Busca contato no HubSpot por telefone
  */
-async function searchContactByPhone(phoneNormalized, propertyName = 'phone') {
+async function searchContactByPhone(phoneNormalized) {
   try {
-    console.log(`🔍 Buscando contato com ${propertyName}: ${phoneNormalized}`);
+    console.log(`🔍 Buscando contato com telefone: ${phoneNormalized}`);
     
     const url = `${HUBSPOT_API_URL}/crm/v3/objects/contacts/search`;
     
@@ -111,7 +105,7 @@ async function searchContactByPhone(phoneNormalized, propertyName = 'phone') {
         {
           filters: [
             {
-              propertyName: propertyName,
+              propertyName: 'phone',
               operator: 'EQ',
               value: phoneNormalized
             }
@@ -140,7 +134,7 @@ async function searchContactByPhone(phoneNormalized, propertyName = 'phone') {
  */
 async function createContact(phoneNormalized, name) {
   try {
-    console.log(`➕ Criando novo contato: ${name} (${phoneNormalized})`);
+    console.log(`➕ Criando novo contato: ${name || 'sem nome'} (${phoneNormalized})`);
     
     const url = `${HUBSPOT_API_URL}/crm/v3/objects/contacts`;
     
@@ -151,7 +145,7 @@ async function createContact(phoneNormalized, name) {
         contact_mgm_phone_normalized: phoneNormalized,
         contact_mgm_indicator_received: 'true',
         contact_mgm_indicator_date: new Date().toISOString().split('T')[0],
-        contact_mgm_indicator_phone: phoneNormalized,
+        contact_mgm_indicator_phone: 'true',
         contact_mgm_indicator_count: '1',
         contact_mgm_matching_confidence: 'High',
       }
@@ -189,9 +183,9 @@ async function updateContact(contactId, properties) {
 }
 
 /**
- * Cria deal MGM
+ * Cria deal MGM no pipeline
  */
-async function createDeal(contactId, phoneNormalized, confidenceScore) {
+async function createDeal(contactId, phoneNormalized) {
   try {
     console.log(`➕ Criando deal MGM para contato: ${contactId}`);
     
@@ -201,7 +195,7 @@ async function createDeal(contactId, phoneNormalized, confidenceScore) {
       properties: {
         dealname: `MGM - ${phoneNormalized}`,
         pipeline: '904463895',
-        deal_mgm_phone_normalized: phoneNormalized,
+        mgm_phone_normalized: phoneNormalized,
         dealstage: '1372198928'
       }
     }, { headers: hubspotHeaders });
@@ -216,38 +210,13 @@ async function createDeal(contactId, phoneNormalized, confidenceScore) {
   }
 }
 
-/**
- * ⭐ ASSOCIA DOIS CONTATOS NO HUBSPOT
- */
-async function associateContacts(contactId1, contactId2) {
-  try {
-    console.log(`🔗 Associando contatos: ${contactId1} ↔ ${contactId2}`);
-    
-    const url = `${HUBSPOT_API_URL}/crm/v3/objects/contacts/${contactId1}/associations/contacts/${contactId2}`;
-    
-    const response = await axios.put(url, 
-      [
-        {
-          associationCategory: 'HUBSPOT_DEFINED',
-          associationTypeId: 1  // Related contact
-        }
-      ], 
-      { headers: hubspotHeaders }
-    );
-    
-    console.log(`✅ Contatos associados com sucesso!`);
-    return true;
-    
-  } catch (err) {
-    console.error('❌ Erro ao associar contatos:', err.response?.data || err.message);
-    return false;
-  }
-}
-
 // ============================================
 // FUNÇÃO PRINCIPAL
 // ============================================
 
+/**
+ * Processa indicação: cria contato e deal
+ */
 async function processarIndicacao(phoneRaw, name = null) {
   try {
     console.log(`\n${'='.repeat(50)}`);
@@ -263,17 +232,18 @@ async function processarIndicacao(phoneRaw, name = null) {
         phone: phoneRaw
       };
     }
-    console.log(`✅ Telefone normalizado: ${phoneNormalized}\n`);
+    console.log();
     
     // 2. BUSCAR CONTATO EXISTENTE
     let existingContact = await searchContactByPhone(phoneNormalized);
     console.log();
     
     let contactId, action;
+    let dealId = null;
     let confidenceScore = 100;
     
     if (existingContact) {
-      // ATUALIZAR CONTATO EXISTENTE
+      // CONTATO JÁ EXISTE - APENAS ATUALIZAR
       action = 'updated';
       contactId = existingContact.id;
       
@@ -291,24 +261,18 @@ async function processarIndicacao(phoneRaw, name = null) {
       confidenceScore = 85;
       
     } else {
-      // CRIAR NOVO CONTATO
+      // CONTATO NOVO - CRIAR CONTATO + DEAL
       action = 'created';
       contactId = await createContact(phoneNormalized, name);
+      console.log();
+      dealId = await createDeal(contactId, phoneNormalized);
       confidenceScore = 100;
-    }
-    
-    console.log();
-    
-    // 3. CRIAR DEAL MGM (apenas se for novo contato)
-    let dealId = null;
-    if (action === 'created') {
-      dealId = await createDeal(contactId, phoneNormalized, confidenceScore);
     }
     
     console.log();
     console.log(`✅ SUCESSO! Indicação processada.\n`);
     
-    // 4. RESPOSTA
+    // RESPOSTA
     return {
       status: 'success',
       action: action,
@@ -329,172 +293,9 @@ async function processarIndicacao(phoneRaw, name = null) {
   }
 }
 
-/**
- * ⭐ VINCULA CONTATO DE SIGNUP AO CONTATO MGM (CORRIGIDO)
- */
-async function linkMGMContactToSignup(phoneNormalized, signupContactId) {
-  try {
-    console.log(`\n${'='.repeat(50)}`);
-    console.log(`🔗 BUSCANDO CONTATO MGM PARA ASSOCIAR`);
-    console.log(`${'='.repeat(50)}\n`);
-    
-    console.log(`📞 Telefone normalizado: ${phoneNormalized}`);
-    console.log(`👤 Contato Signup ID: ${signupContactId}\n`);
-    
-    // 1. BUSCAR CONTATO A (criado via indicação MGM)
-    const mgmContact = await searchContactByPhone(
-      phoneNormalized, 
-      'contact_mgm_phone_normalized'
-    );
-    
-    console.log();
-    
-    if (!mgmContact) {
-      console.log(`⚠️ Nenhum contato MGM encontrado para ${phoneNormalized}`);
-      return { found: false, message: 'Contato MGM não encontrado' };
-    }
-    
-    const mgmContactId = mgmContact.id;
-    console.log(`✅ Contato MGM encontrado: ${mgmContactId}`);
-    console.log();
-    
-    // 2. ASSOCIAR CONTATO B (signup) AO CONTATO A (MGM)
-    const associated = await associateContacts(mgmContactId, signupContactId);
-    
-    if (!associated) {
-      return { 
-        found: true, 
-        mgmContactId, 
-        signupContactId,
-        associated: false,
-        message: 'Contato MGM encontrado mas associação falhou'
-      };
-    }
-    
-    console.log();
-    
-    // 3. MARCAR CONTATO B (signup) COM PROPRIEDADES MGM
-    try {
-      console.log(`📝 Marcando contato ${signupContactId} como signup confirmado`);
-      
-      await updateContact(signupContactId, {
-        contact_mgm_phone_normalized: phoneNormalized,
-        contact_mgm_signup_confirmed: 'true',
-        contact_mgm_signup_date: new Date().toISOString().split('T')[0],
-        contact_mgm_associated_to: mgmContactId
-      });
-      
-      console.log(`✅ Contato de signup marcado com sucesso!`);
-      console.log();
-      
-    } catch (updateErr) {
-      console.warn('⚠️ Aviso ao marcar contato:', updateErr.message);
-    }
-    
-    console.log(`🎉 SUCESSO! Contatos associados!\n`);
-    
-    return {
-      found: true,
-      mgmContactId: mgmContactId,
-      signupContactId: signupContactId,
-      associated: true,
-      message: 'Contatos associados com sucesso!'
-    };
-    
-  } catch (err) {
-    console.error('❌ Erro ao buscar/associar contato MGM:', err.message);
-    return { 
-      found: false, 
-      message: err.message 
-    };
-  }
-}
-
 // ============================================
 // ENDPOINTS
 // ============================================
-
-/**
- * POST /api/mgm/webhook
- * Recebe webhook do HubSpot quando contato é criado/atualizado
- */
-app.post('/api/mgm/webhook', async (req, res) => {
-  try {
-    console.log(`\n🔔 WEBHOOK RECEBIDO DO HUBSPOT`);
-    console.log(`📦 Payload:`, JSON.stringify(req.body, null, 2));
-    
-    // O HubSpot envia: { hs_object_id: "...", phone: "..." }
-    const { hs_object_id, phone } = req.body;
-    
-    if (!hs_object_id || !phone) {
-      console.log(`⚠️ Dados incompletos no webhook`);
-      return res.status(200).json({ status: 'ok', processed: 0, message: 'Dados incompletos' });
-    }
-    
-    const contactId = hs_object_id;
-    const phoneRaw = phone;
-    
-    console.log(`\n📋 Contato Signup ID: ${contactId}, Telefone: ${phoneRaw}`);
-    
-    // Normalizar telefone
-    const phoneNormalized = normalizePhone(phoneRaw);
-    if (!phoneNormalized) {
-      console.log(`⚠️ Telefone inválido: ${phoneRaw}`);
-      return res.status(200).json({ status: 'ok', processed: 0, message: 'Telefone inválido' });
-    }
-    
-    console.log();
-    
-    // Buscar e associar contato MGM
-    const result = await linkMGMContactToSignup(phoneNormalized, contactId);
-    
-    console.log(`\n✅ Webhook processado com sucesso\n`);
-    res.status(200).json({ 
-      status: 'ok', 
-      processed: result.found ? 1 : 0,
-      found: result.found,
-      associated: result.associated || false,
-      message: result.message
-    });
-    
-  } catch (err) {
-    console.error(`❌ Erro no webhook:`, err.message);
-    res.status(500).json({ 
-      status: 'error', 
-      message: err.message 
-    });
-  }
-});
-
-/**
- * GET /api/mgm/link-signup
- * Testa se consegue encontrar e associar contato MGM
- */
-app.get('/api/mgm/link-signup', async (req, res) => {
-  const { phone, contactId } = req.query;
-  
-  if (!phone || !contactId) {
-    return res.status(400).json({
-      status: 'error',
-      message: 'Parâmetros obrigatórios: phone e contactId. Exemplo: /api/mgm/link-signup?phone=11987654321&contactId=123'
-    });
-  }
-  
-  const phoneNormalized = normalizePhone(phone);
-  if (!phoneNormalized) {
-    return res.status(400).json({
-      status: 'error',
-      message: 'Telefone inválido'
-    });
-  }
-  
-  const result = await linkMGMContactToSignup(phoneNormalized, contactId);
-  
-  res.json({
-    status: 'ok',
-    ...result
-  });
-});
 
 /**
  * POST /api/mgm
@@ -540,7 +341,7 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    version: '1.1.0 - FIXED'
+    version: '1.2.0'
   });
 });
 
@@ -550,24 +351,51 @@ app.get('/health', (req, res) => {
  */
 app.get('/', (req, res) => {
   res.send(`
-    <h1>🤖 MGM Agent - HubSpot (v1.1.0 FIXED)</h1>
-    <p>Agente de processamento de indicações MGM com associação de contatos</p>
-    
-    <h2>Endpoints:</h2>
-    <ul>
-      <li><strong>POST /api/mgm</strong> - Processar indicação (JSON)</li>
-      <li><strong>GET /api/mgm?phone=11987654321</strong> - Processar indicação (Query)</li>
-      <li><strong>GET /api/mgm/link-signup?phone=11987654321&contactId=123</strong> - Testar associação</li>
-      <li><strong>GET /health</strong> - Status da aplicação</li>
-    </ul>
-    
-    <h2>Fluxo de Associação:</h2>
-    <ol>
-      <li>Contato A criado via /api/mgm (indicação)</li>
-      <li>Webhook disparado quando Contato B chega (form/signup)</li>
-      <li>Sistema busca Contato A pelo telefone</li>
-      <li>Se encontrado, associa B a A automaticamente</li>
-    </ol>
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>MGM Agent</title>
+      <style>
+        body { font-family: Arial; margin: 40px; background: #f5f5f5; }
+        h1 { color: #667eea; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        code { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; }
+        ul { line-height: 1.8; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>🤖 MGM Agent - HubSpot</h1>
+        <p><strong>Versão:</strong> 1.2.0</p>
+        <p><strong>Status:</strong> ✅ Online</p>
+        
+        <h2>📡 Endpoints:</h2>
+        <ul>
+          <li><code>POST /api/mgm</code> - Processar indicação (JSON)</li>
+          <li><code>GET /api/mgm?phone=11987654321</code> - Processar indicação (Query)</li>
+          <li><code>GET /health</code> - Status da aplicação</li>
+        </ul>
+        
+        <h2>🔄 Fluxo:</h2>
+        <ol>
+          <li>Cliente envia telefone via web ou API</li>
+          <li>Sistema normaliza e valida telefone</li>
+          <li>Busca contato existente no HubSpot</li>
+          <li>Se novo → cria contato + deal no pipeline MGM</li>
+          <li>Se existe → atualiza propriedades MGM</li>
+        </ol>
+        
+        <h2>📊 Properties Preenchidas:</h2>
+        <ul>
+          <li>contact_mgm_phone_normalized</li>
+          <li>contact_mgm_indicator_received</li>
+          <li>contact_mgm_indicator_date</li>
+          <li>contact_mgm_indicator_count</li>
+          <li>contact_mgm_matching_confidence</li>
+        </ul>
+      </div>
+    </body>
+    </html>
   `);
 });
 
@@ -578,16 +406,15 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════╗
-║  🤖 MGM AGENT - RUNNING (v1.1.0)       ║
+║  🤖 MGM AGENT v1.2.0 - RUNNING         ║
 ║  📍 http://localhost:${PORT}            ║
 ╚════════════════════════════════════════╝
 
 Endpoints:
   POST http://localhost:${PORT}/api/mgm
-  GET  http://localhost:${PORT}/api/mgm?phone=11987654321
-  GET  http://localhost:${PORT}/api/mgm/link-signup?phone=11987654321&contactId=123
+  GET  http://localhost:${PORT}/api/mgm?phone=11987654321&name=João
 
 Exemplo:
-  curl "http://localhost:${PORT}/api/mgm?phone=11987654321&name=João"
+  curl "http://localhost:${PORT}/api/mgm?phone=11987654321&name=João Silva"
   `);
 });
