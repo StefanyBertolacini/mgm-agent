@@ -67,18 +67,14 @@ function normalizePhone(phoneRaw) {
       return phoneRaw;
     }
     
-    // Remove espaços e hífens
+    // Se não, remove hífens e espaços
     const cleaned = phoneRaw.replace(/[\s\-]/g, '');
     
-    // Parsear com google-libphonenumber
-    const parsed = phoneUtil.parseAndKeepRawInput(cleaned, 'BR');
-    
-    // Retornar em formato E164
-    const formatted = phoneUtil.format(parsed, PNF.E164);
-    console.log(`✅ Telefone normalizado: ${formatted}`);
-    return formatted;
+    // Retorna como está (sem usar PNF)
+    console.log(`✅ Telefone formatado: ${cleaned}`);
+    return cleaned;
   } catch (err) {
-    console.error(`⚠️ Erro ao normalizar: ${phoneRaw}`, err.message);
+    console.error(`⚠️ Erro ao processar: ${phoneRaw}`, err.message);
     return null;
   }
 }
