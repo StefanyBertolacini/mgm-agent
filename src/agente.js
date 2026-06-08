@@ -331,70 +331,42 @@ app.post('/api/mgm/webhook', async (req, res) => {
     console.log(`\n🔔 WEBHOOK RECEBIDO DO HUBSPOT`);
     console.log(`📦 Payload:`, JSON.stringify(req.body, null, 2));
     
-    // HubSpot envia array de eventos
-    const events = req.body;
+    // O HubSpot envia: { hs_object_id: "...", phone: "..." }
+    const { hs_object_id, phone } = req.body;
     
-    if (!Array.isArray(events) || events.length === 0) {
-      return res.status(200).json({ status: 'ok', processed: 0 });
+    if (!hs_object_id || !phone) {
+      console.log(`⚠️ Dados incompletos no webhook`);
+      return res.status(200).json({ status: 'ok', processed: 0, message: 'Dados incompletos' });
     }
     
-    let processed = 0;
+    const contactId = hs_object_id;
+    const phoneRaw = phone;
     
-    for (const event of events) {
-      try {
-        const contactId = event.objectId;
-        const propertyName = event.propertyName;
-        const propertyValue = event.propertyValue;
-        
-        console.log(`\n📋 Evento: contactId=${contactId}, property=${propertyName}`);
-        
-        // Só processa se é a propriedade de phone
-        if (propertyName !== 'phone' && propertyName !== 'hs_lead_status') {
-          console.log(`⏭️ Ignorando propriedade: ${propertyName}`);
-          continue;
-        }
-        
-        // Buscar contato completo no HubSpot
-        const url = `${HUBSPOT_API_URL}/crm/v3/objects/contacts/${contactId}`;
-        const contactResponse = await axios.get(url, { headers: hubspotHeaders });
-        const phone = contactResponse.data.properties?.phone;
-        
-        if (!phone) {
-          console.log(`⚠️ Contato ${contactId} sem telefone`);
-          continue;
-        }
-        
-        console.log(`📞 Telefone encontrado: ${phone}`);
-        
-        // Normalizar telefone
-        const phoneNormalized = normalizePhone(phone);
-        if (!phoneNormalized) {
-          console.log(`⚠️ Telefone inválido: ${phone}`);
-          continue;
-        }
-        
-        console.log(`✅ Telefone normalizado: ${phoneNormalized}`);
-        
-        // Buscar deal MGM
-        const result = await linkMGMDealToSignup(phoneNormalized, contactId);
-        if (result.found) {
-            console.log(`🎉 Contatos associados! MGM: ${result.mgmContactId}, Signup: ${result.signupContactId}`);
-        } else {
-            console.log(`ℹ️ Nenhum contato MGM encontrado para ${phoneNormalized}`);
-        }
-        
-        processed++;
-        
-      } catch (eventErr) {
-        console.error(`❌ Erro ao processar evento:`, eventErr.message);
-      }
+    console.log(`\n📋 Contato ID: ${contactId}, Telefone: ${phoneRaw}`);
+    
+    // Normalizar telefone
+    const phoneNormalized = normalizePhone(phoneRaw);
+    if (!phoneNormalized) {
+      console.log(`⚠️ Telefone inválido: ${phoneRaw}`);
+      return res.status(200).json({ status: 'ok', processed: 0, message: 'Telefone inválido' });
     }
     
-    console.log(`\n✅ Webhook processado. ${processed} evento(s) tratado(s)\n`);
+    console.log(`✅ Telefone normalizado: ${phoneNormalized}`);
+    
+    // Buscar e associar contato MGM
+    const result = await linkMGMDealToSignup(phoneNormalized, contactId);
+    
+    if (result.found) {
+      console.log(`🎉 Contatos associados! MGM: ${result.mgmContactId}, Signup: ${result.signupContactId}`);
+    } else {
+      console.log(`ℹ️ Nenhum contato MGM encontrado para ${phoneNormalized}`);
+    }
+    
+    console.log(`\n✅ Webhook processado com sucesso\n`);
     res.status(200).json({ 
       status: 'ok', 
-      processed: processed,
-      message: `${processed} evento(s) processado(s)`
+      processed: result.found ? 1 : 0,
+      message: result.found ? 'Contatos associados' : 'Nenhuma associação encontrada'
     });
     
   } catch (err) {
