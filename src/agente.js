@@ -132,7 +132,7 @@ async function createContact(normalizedPhone, name, origin, ownerId) {
           firstname: name || 'Contato MGM',
           contact_mgm_phone_normalized: normalizedPhone,
           contact_mgm_indicator_received: 'true',
-          contact_mgm_indicator_date: new Date().toISOString(),
+          contact_mgm_indicator_date: new Date().toISOString().split('T')[0],
           contact__cross__source: origin || 'MGM',
           hubspot_owner_id: ownerId
         }
