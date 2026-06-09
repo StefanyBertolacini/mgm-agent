@@ -49,7 +49,6 @@ const hubspotHeaders = {
 // ============================================
 
 app.use(express.json());
-const path = require('path');
 app.use(express.static(path.join(__dirname, '..')));
 
 // Rota GET / para servir app.html
@@ -374,7 +373,6 @@ app.get('/health', (req, res) => {
 // ============================================
 // Serve app.html para rota raiz
 app.get('/', (req, res) => {
-  const path = require('path');
   res.sendFile(path.join(__dirname, '../app.html'));
 });
 
