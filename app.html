@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MGM Agent - HubSpot</title>
+    <title>Capim - MGM Agent</title>
     <style>
         * {
             margin: 0;
@@ -11,82 +11,115 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary: #6B2D8F;
+            --secondary: #B4D84F;
+            --dark: #1a1a1a;
+            --light: #f8f8f8;
+            --border: #e0e0e0;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, #8b3ba3 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
         }
 
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 700px;
-            width: 100%;
-            padding: 40px;
+        .wrapper {
+            max-width: 900px;
+            margin: 0 auto;
         }
 
+        /* HEADER */
         .header {
-            text-align: center;
-            margin-bottom: 30px;
+            background: white;
+            border-radius: 16px 16px 0 0;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 4px solid var(--secondary);
         }
 
         .logo {
             font-size: 40px;
-            margin-bottom: 10px;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary), #8b3ba3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        h1 {
-            color: #333;
+        .header-info h1 {
+            color: var(--primary);
             font-size: 28px;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
-        .subtitle {
+        .header-info p {
             color: #666;
             font-size: 14px;
         }
 
+        /* CONTAINER */
+        .container {
+            background: white;
+            border-radius: 0 0 16px 16px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* FORM SECTIONS */
         .form-section {
-            margin-bottom: 25px;
+            margin-bottom: 35px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
+        .form-section:last-of-type {
+            margin-bottom: 0;
         }
 
-        label {
-            display: block;
-            color: #333;
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .section-icon {
+            font-size: 24px;
+        }
+
+        .section-title h2 {
+            font-size: 18px;
+            color: var(--primary);
             font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 14px;
         }
 
-        .help-text {
+        .section-help {
+            font-size: 13px;
             color: #999;
-            font-size: 12px;
-            margin-top: 4px;
+            margin-top: 8px;
         }
 
+        /* INPUTS */
         textarea, input[type="text"], select {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
+            padding: 14px;
+            margin-top: 8px;
+            border: 2px solid var(--border);
             border-radius: 8px;
             font-size: 14px;
             font-family: inherit;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
         }
 
         textarea:focus, input[type="text"]:focus, select:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(107, 45, 143, 0.1);
         }
 
         textarea {
@@ -94,77 +127,90 @@
             min-height: 120px;
         }
 
-        .owner-mode-toggle {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+        /* TOGGLE BUTTONS */
+        .mode-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+            margin-bottom: 20px;
         }
 
         .toggle-btn {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
+            padding: 12px;
+            border: 2px solid var(--border);
             background: white;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
+            font-size: 14px;
             color: #666;
             transition: all 0.3s;
         }
 
+        .toggle-btn:hover {
+            border-color: var(--primary);
+            background: rgba(107, 45, 143, 0.05);
+        }
+
         .toggle-btn.active {
-            background: #667eea;
+            background: var(--primary);
             color: white;
-            border-color: #667eea;
+            border-color: var(--primary);
         }
 
-        .owner-options {
+        /* CHECKBOXES GRID */
+        .owner-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            max-height: 300px;
-            overflow-y: auto;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            padding: 16px;
+            background: var(--light);
             border-radius: 8px;
-            background: #f9f9f9;
+            max-height: 350px;
+            overflow-y: auto;
         }
 
-        .owner-checkbox {
+        .checkbox-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px;
+            gap: 10px;
+            padding: 10px 12px;
             border-radius: 6px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
         }
 
-        .owner-checkbox:hover {
-            background: #e8e8f0;
+        .checkbox-item:hover {
+            background: white;
         }
 
-        .owner-checkbox input[type="checkbox"] {
+        .checkbox-item input {
             cursor: pointer;
             width: 18px;
             height: 18px;
+            accent-color: var(--secondary);
         }
 
-        .owner-checkbox label {
-            margin: 0;
-            font-weight: 500;
+        .checkbox-item label {
             cursor: pointer;
             flex: 1;
+            font-size: 14px;
+            color: var(--dark);
+            margin: 0;
         }
 
-        .buttons {
-            display: flex;
+        /* BUTTONS */
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-top: 30px;
+            margin-top: 35px;
+            padding-top: 30px;
+            border-top: 2px solid var(--border);
         }
 
         button {
-            flex: 1;
             padding: 14px;
             border: none;
             border-radius: 8px;
@@ -175,80 +221,39 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary), #8b3ba3);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 20px rgba(107, 45, 143, 0.3);
         }
 
         .btn-secondary {
-            background: #e0e0e0;
-            color: #333;
+            background: var(--light);
+            color: var(--primary);
+            border: 2px solid var(--border);
         }
 
         .btn-secondary:hover {
-            background: #d0d0d0;
+            background: var(--border);
         }
 
-        .results {
-            margin-top: 30px;
-            padding-top: 30px;
-            border-top: 2px solid #e0e0e0;
-        }
-
-        .result-item {
-            background: #f0f4ff;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            margin-bottom: 12px;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-
-        .result-item.success {
-            background: #f0fdf4;
-            border-left-color: #22c55e;
-        }
-
-        .result-item.error {
-            background: #fef2f2;
-            border-left-color: #ef4444;
-        }
-
-        .result-phone {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 4px;
-        }
-
-        .result-status {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-
-        .result-message {
-            font-size: 12px;
-            color: #999;
-            font-style: italic;
-        }
-
+        /* LOADING */
         .loading {
             display: none;
             text-align: center;
-            margin-top: 20px;
+            padding: 20px;
         }
 
         .spinner {
-            border: 3px solid #e0e0e0;
-            border-top: 3px solid #667eea;
+            border: 3px solid var(--light);
+            border-top: 3px solid var(--primary);
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -261,175 +266,280 @@
             100% { transform: rotate(360deg); }
         }
 
-        .icon {
-            font-size: 20px;
+        /* RESULTS */
+        .results {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid var(--border);
+            display: none;
+        }
+
+        .results h3 {
+            color: var(--primary);
+            font-size: 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-item {
+            background: var(--light);
+            border-left: 4px solid var(--primary);
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .result-item:hover {
+            box-shadow: 0 4px 12px rgba(107, 45, 143, 0.1);
+        }
+
+        .result-item.success {
+            background: #f0fdf4;
+            border-left-color: var(--secondary);
+        }
+
+        .result-item.error {
+            background: #fef2f2;
+            border-left-color: #ef4444;
+        }
+
+        .result-phone {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+
+        .result-status {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .result-message {
+            font-size: 13px;
+            color: #999;
+            font-style: italic;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                padding: 20px;
+            }
+
+            .header-info h1 {
+                font-size: 22px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .owner-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* SCROLLBAR */
+        .owner-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .owner-grid::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .owner-grid::-webkit-scrollbar-thumb {
+            background: var(--secondary);
+            border-radius: 3px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="wrapper">
+        <!-- HEADER -->
         <div class="header">
-            <div class="logo">🤖</div>
-            <h1>MGM Agent</h1>
-            <p class="subtitle">Processe múltiplas indicações em lote</p>
+            <div class="logo">💳</div>
+            <div class="header-info">
+                <h1>MGM Agent</h1>
+                <p>Processamento de indicações para HubSpot</p>
+            </div>
         </div>
 
-        <form id="mgmForm">
-            <!-- SEÇÃO 1: TELEFONES -->
-            <div class="form-section">
-                <div class="form-group">
-                    <label><span class="icon">📱</span> Telefones</label>
-                    <textarea id="phones" placeholder="Cole um telefone por linha:&#10;11 98765-4321&#10;21 99999-8888&#10;85 98765-4321&#10;&#10;Ou com nome (opcional):&#10;11 98765-4321 - João Silva&#10;21 99999-8888 - Maria Santos" required></textarea>
-                    <div class="help-text">Um telefone por linha. Opcionalmente coloque &quot; - Nome&quot; após o telefone.</div>
-                </div>
-            </div>
-
-            <!-- SEÇÃO 2: ORIGEM -->
-            <div class="form-section">
-                <div class="form-group">
-                    <label><span class="icon">🔗</span> Origem</label>
-                    <input type="text" id="origin" placeholder="Ex: Indicação MGM, Form Website, LinkedIn, Telefone Direto, etc">
-                    <div class="help-text">Campo livre - escreva a origem dos contatos</div>
-                </div>
-            </div>
-
-            <!-- SEÇÃO 3: PROPRIETÁRIO -->
-            <div class="form-section">
-                <label><span class="icon">👤</span> Proprietário do Contato</label>
-                
-                <div class="owner-mode-toggle">
-                    <button type="button" class="toggle-btn active" data-mode="single">
-                        Um Proprietário
-                    </button>
-                    <button type="button" class="toggle-btn" data-mode="multiple">
-                        Múltiplos (Rotação)
-                    </button>
+        <!-- CONTAINER -->
+        <div class="container">
+            <form id="mgmForm">
+                <!-- TELEFONES -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <span class="section-icon">📱</span>
+                        <h2>Telefones</h2>
+                    </div>
+                    <textarea id="phones" placeholder="Cole um telefone por linha:&#10;11 98765-4321&#10;21 99999-8888&#10;&#10;Ou com nome (opcional):&#10;11 98765-4321 - João Silva" required></textarea>
+                    <div class="section-help">Um telefone por linha. Opcionalmente coloque &quot; - Nome&quot; após o telefone.</div>
                 </div>
 
-                <!-- Modo: Um único proprietário -->
-                <div id="singleOwnerMode" class="form-group">
-                    <select id="singleOwner">
-                        <option value="">Selecione um proprietário</option>
-                        <option value="1996135921">Juan Albuquerque</option>
-                        <option value="76004207">Beatriz Cassiano</option>
-                        <option value="78826230">Miguel Marins</option>
-                        <option value="76004206">Victor Campioni</option>
-                        <option value="537405053">Newton Silva</option>
-                        <option value="741522075">Mariana Magalhães</option>
-                        <option value="277149482">Vinícius Fernandes</option>
-                        <option value="83252425">Eduardo Martins</option>
-                        <option value="82793698">André Fortes</option>
-                        <option value="86060512">Emílio Rocha</option>
-                        <option value="86819412">Rodrigo Brandão</option>
-                        <option value="82350545">Jessica Anacleto</option>
-                        <option value="81631288">Bruna Messias</option>
-                        <option value="505224976">Pedro Assunção</option>
-                        <option value="85357564">Sarah Roubaud</option>
-                        <option value="90532052">Stefany Bertolacini</option>
-                        <option value="87801244">Amauri Junior</option>
-                        <option value="77821966">Gabriel Gandra</option>
-                    </select>
+                <!-- ORIGEM -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <span class="section-icon">🔗</span>
+                        <h2>Origem</h2>
+                    </div>
+                    <input type="text" id="origin" placeholder="Ex: LinkedIn, Indicação MGM, Telefone Direto...">
+                    <div class="section-help">Descreva a origem dos contatos</div>
                 </div>
 
-                <!-- Modo: Múltiplos proprietários com rotação -->
-                <div id="multipleOwnerMode" style="display: none;">
-                    <div class="help-text" style="margin-bottom: 10px;">Selecione 2 ou mais proprietários. Os contatos serão distribuídos entre eles.</div>
-                    <div class="owner-options" id="ownerCheckboxes">
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-1996135921" value="1996135921">
-                            <label for="owner-1996135921">Juan Albuquerque</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-76004207" value="76004207">
-                            <label for="owner-76004207">Beatriz Cassiano</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-78826230" value="78826230">
-                            <label for="owner-78826230">Miguel Marins</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-76004206" value="76004206">
-                            <label for="owner-76004206">Victor Campioni</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-537405053" value="537405053">
-                            <label for="owner-537405053">Newton Silva</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-741522075" value="741522075">
-                            <label for="owner-741522075">Mariana Magalhães</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-277149482" value="277149482">
-                            <label for="owner-277149482">Vinícius Fernandes</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-83252425" value="83252425">
-                            <label for="owner-83252425">Eduardo Martins</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-82793698" value="82793698">
-                            <label for="owner-82793698">André Fortes</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-86060512" value="86060512">
-                            <label for="owner-86060512">Emílio Rocha</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-86819412" value="86819412">
-                            <label for="owner-86819412">Rodrigo Brandão</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-82350545" value="82350545">
-                            <label for="owner-82350545">Jessica Anacleto</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-81631288" value="81631288">
-                            <label for="owner-81631288">Bruna Messias</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-505224976" value="505224976">
-                            <label for="owner-505224976">Pedro Assunção</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-85357564" value="85357564">
-                            <label for="owner-85357564">Sarah Roubaud</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-90532052" value="90532052">
-                            <label for="owner-90532052">Stefany Bertolacini</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-87801244" value="87801244">
-                            <label for="owner-87801244">Amauri Junior</label>
-                        </div>
-                        <div class="owner-checkbox">
-                            <input type="checkbox" id="owner-77821966" value="77821966">
-                            <label for="owner-77821966">Gabriel Gandra</label>
+                <!-- PROPRIETÁRIO -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <span class="section-icon">👤</span>
+                        <h2>Proprietário do Contato</h2>
+                    </div>
+
+                    <div class="mode-toggle">
+                        <button type="button" class="toggle-btn active" data-mode="single">
+                            Um Proprietário
+                        </button>
+                        <button type="button" class="toggle-btn" data-mode="multiple">
+                            Múltiplos (Rotação)
+                        </button>
+                    </div>
+
+                    <!-- MODO ÚNICO -->
+                    <div id="singleOwnerMode">
+                        <select id="singleOwner">
+                            <option value="">Selecione um proprietário</option>
+                            <option value="1996135921">Juan Albuquerque</option>
+                            <option value="76004207">Beatriz Cassiano</option>
+                            <option value="78826230">Miguel Marins</option>
+                            <option value="76004206">Victor Campioni</option>
+                            <option value="537405053">Newton Silva</option>
+                            <option value="741522075">Mariana Magalhães</option>
+                            <option value="277149482">Vinícius Fernandes</option>
+                            <option value="83252425">Eduardo Martins</option>
+                            <option value="82793698">André Fortes</option>
+                            <option value="86060512">Emílio Rocha</option>
+                            <option value="86819412">Rodrigo Brandão</option>
+                            <option value="82350545">Jessica Anacleto</option>
+                            <option value="81631288">Bruna Messias</option>
+                            <option value="505224976">Pedro Assunção</option>
+                            <option value="85357564">Sarah Roubaud</option>
+                            <option value="90532052">Stefany Bertolacini</option>
+                            <option value="87801244">Amauri Junior</option>
+                            <option value="77821966">Gabriel Gandra</option>
+                        </select>
+                    </div>
+
+                    <!-- MODO MÚLTIPLO -->
+                    <div id="multipleOwnerMode" style="display: none;">
+                        <div class="section-help" style="margin-bottom: 12px;">Selecione 2 ou mais proprietários. Os contatos serão distribuídos entre eles.</div>
+                        <div class="owner-grid" id="ownerCheckboxes">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-1996135921" value="1996135921">
+                                <label for="owner-1996135921">Juan Albuquerque</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-76004207" value="76004207">
+                                <label for="owner-76004207">Beatriz Cassiano</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-78826230" value="78826230">
+                                <label for="owner-78826230">Miguel Marins</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-76004206" value="76004206">
+                                <label for="owner-76004206">Victor Campioni</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-537405053" value="537405053">
+                                <label for="owner-537405053">Newton Silva</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-741522075" value="741522075">
+                                <label for="owner-741522075">Mariana Magalhães</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-277149482" value="277149482">
+                                <label for="owner-277149482">Vinícius Fernandes</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-83252425" value="83252425">
+                                <label for="owner-83252425">Eduardo Martins</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-82793698" value="82793698">
+                                <label for="owner-82793698">André Fortes</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-86060512" value="86060512">
+                                <label for="owner-86060512">Emílio Rocha</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-86819412" value="86819412">
+                                <label for="owner-86819412">Rodrigo Brandão</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-82350545" value="82350545">
+                                <label for="owner-82350545">Jessica Anacleto</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-81631288" value="81631288">
+                                <label for="owner-81631288">Bruna Messias</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-505224976" value="505224976">
+                                <label for="owner-505224976">Pedro Assunção</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-85357564" value="85357564">
+                                <label for="owner-85357564">Sarah Roubaud</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-90532052" value="90532052">
+                                <label for="owner-90532052">Stefany Bertolacini</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-87801244" value="87801244">
+                                <label for="owner-87801244">Amauri Junior</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="owner-77821966" value="77821966">
+                                <label for="owner-77821966">Gabriel Gandra</label>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- BOTÕES -->
-            <div class="buttons">
-                <button type="submit" class="btn-primary">
-                    <span>🚀</span> Processar
-                </button>
-                <button type="reset" class="btn-secondary">Limpar</button>
-            </div>
+                <!-- BOTÕES -->
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">
+                        <span>🚀</span> Processar
+                    </button>
+                    <button type="reset" class="btn-secondary">Limpar</button>
+                </div>
 
-            <!-- LOADING -->
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p>Processando...</p>
-            </div>
-        </form>
+                <!-- LOADING -->
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Processando...</p>
+                </div>
+            </form>
 
-        <!-- RESULTADOS -->
-        <div id="results" class="results" style="display: none;">
-            <h2 style="margin-bottom: 15px; color: #333;">Resultados</h2>
-            <div id="resultsList"></div>
+            <!-- RESULTADOS -->
+            <div id="results" class="results">
+                <h3>✅ Resultados</h3>
+                <div id="resultsList"></div>
+            </div>
         </div>
     </div>
 
@@ -444,7 +554,7 @@
 
         let currentMode = 'single';
 
-        // Toggle entre modo único e múltiplo
+        // Toggle modo
         toggleBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -465,7 +575,7 @@
             });
         });
 
-        // Processar formulário
+        // Enviar formulário
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -477,7 +587,6 @@
                 return;
             }
 
-            // Validar proprietário
             let owners = [];
             if (currentMode === 'single') {
                 const singleOwner = document.getElementById('singleOwner').value;
@@ -495,7 +604,6 @@
                 }
             }
 
-            // Parsear telefones
             const phones = phonesText.split('\n')
                 .map(line => line.trim())
                 .filter(line => line.length > 0);
@@ -505,7 +613,6 @@
                 return;
             }
 
-            // Mostrar loading
             loading.style.display = 'block';
             resultsDiv.style.display = 'none';
             resultsList.innerHTML = '';
@@ -516,7 +623,6 @@
                 for (let i = 0; i < phones.length; i++) {
                     const phoneLine = phones[i];
                     
-                    // Parse: "11 98765-4321" ou "11 98765-4321 - João Silva"
                     let phone = phoneLine;
                     let name = '';
                     
@@ -526,16 +632,13 @@
                         name = parts[1].trim();
                     }
 
-                    // Determinar proprietário
                     let owner;
                     if (currentMode === 'single') {
                         owner = owners[0];
                     } else {
-                        // Rotação: i % owners.length
                         owner = owners[i % owners.length];
                     }
 
-                    // Fazer requisição
                     const response = await fetch('/api/mgm', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -555,7 +658,6 @@
                     });
                 }
 
-                // Mostrar resultados
                 resultsList.innerHTML = results.map(r => {
                     const isSuccess = r.status === 'success';
                     const className = isSuccess ? 'success' : 'error';
