@@ -366,6 +366,11 @@ app.get('/health', (req, res) => {
 // ============================================
 // START SERVER
 // ============================================
+// Serve app.html para rota raiz
+app.get('/', (req, res) => {
+  const path = require('path');
+  res.sendFile(path.join(__dirname, '../app.html'));
+});
 
 app.listen(PORT, () => {
   console.log(`
