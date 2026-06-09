@@ -52,6 +52,11 @@ app.use(express.json());
 const path = require('path');
 app.use(express.static(path.join(__dirname, '..')));
 
+// Rota GET / para servir app.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../app.html'));
+});
+
 // ============================================
 // FUNÇÕES AUXILIARES
 // ============================================
