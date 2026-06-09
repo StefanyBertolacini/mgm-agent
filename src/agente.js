@@ -21,8 +21,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
-
 const PORT = process.env.PORT || 3000;
 
 // ============================================
@@ -46,34 +44,34 @@ const hubspotHeaders = {
 };
 
 // ============================================
+// MIDDLEWARE
+// ============================================
+
+app.use(express.json());
+const path = require('path');
+app.use(express.static(path.join(__dirname, '..')));
+
+// ============================================
 // FUNÇÕES AUXILIARES
 // ============================================
 
 /**
- * Normaliza telefone para formato padrão
- * Input: "11 98765-4321", "+55 11 98765-4321", "554799999999"
- * Output: "+5554799999999" ou "11987654321"
+ * Normaliza telefone para formato padrão E.164
  */
 function normalizePhone(phoneRaw) {
   if (!phoneRaw) return null;
   
   try {
-    // Remove TUDO exceto números e +
-    let cleaned = phoneRaw.replace(/[^\d+]/g, '');
+    // Remove TODOS os caracteres não numéricos (hífens, espaços, etc)
+    let cleaned = phoneRaw.replace(/\D/g, '');
     
-    // Remove o + se existir (para padronização)
-    if (cleaned.startsWith('+')) {
-      cleaned = cleaned.substring(1);
-    }
-    
-    // Se começar com 0, remove (comum em formatação brasileira)
+    // Se começar com 0, remove
     if (cleaned.startsWith('0')) {
       cleaned = cleaned.substring(1);
     }
     
-    // Se não tem código de país (55 para Brasil), adiciona
+    // Se não tem código de país (55), adiciona
     if (!cleaned.startsWith('55')) {
-      // Assumindo Brasil como padrão
       if (cleaned.length === 11 || cleaned.length === 10) {
         cleaned = '55' + cleaned;
       }
@@ -120,36 +118,48 @@ async function searchContactByPhone(phoneNormalized) {
       return response.data.results[0];
     }
     
-    console.log(`ℹ️ Nenhum contato encontrado`);
+    console.log(`ℹ️ Nenhum contato encontrado com esse telefone`);
     return null;
     
   } catch (err) {
-    console.error('❌ Erro ao buscar contato:', err.response?.data || err.message);
-    return null;
+    console.error('❌ Erro ao buscar contato:', err.message);
+    throw err;
   }
 }
 
 /**
  * Cria novo contato no HubSpot
  */
-async function createContact(phoneNormalized, name) {
+async function createContact(phoneNormalized, name, origin, ownerId) {
   try {
-    console.log(`➕ Criando novo contato: ${name || 'sem nome'} (${phoneNormalized})`);
+    console.log(`➕ Criando novo contato: ${name || phoneNormalized}`);
     
     const url = `${HUBSPOT_API_URL}/crm/v3/objects/contacts`;
     
-    const response = await axios.post(url, {
-      properties: {
-        firstname: name || `Indicação MGM - ${phoneNormalized}`,
-        phone: phoneNormalized,
-        contact_mgm_phone_normalized: phoneNormalized,
-        contact_mgm_indicator_received: 'true',
-        contact_mgm_indicator_date: new Date().toISOString().split('T')[0],
-        contact_mgm_indicator_phone: 'true',
-        contact_mgm_indicator_count: '1',
-        contact_mgm_matching_confidence: 'High',
-      }
-    }, { headers: hubspotHeaders });
+    const properties = {
+      firstname: name || `Indicação MGM - ${phoneNormalized}`,
+      phone: phoneNormalized,
+      contact_mgm_phone_normalized: phoneNormalized,
+      contact_mgm_indicator_received: 'true',
+      contact_mgm_indicator_date: new Date().toISOString().split('T')[0],
+      contact_mgm_indicator_phone: phoneNormalized,
+      contact_mgm_indicator_count: '1',
+      contact_mgm_matching_confidence: 'High',
+    };
+
+    // Adicionar origem se fornecida
+    if (origin) {
+      properties.contact__cross__source = origin;
+      console.log(`📝 Origem adicionada: ${origin}`);
+    }
+
+    // Adicionar proprietário se fornecido
+    if (ownerId) {
+      properties.hubspot_owner_id = ownerId;
+      console.log(`👤 Proprietário adicionado: ${ownerId}`);
+    }
+
+    const response = await axios.post(url, { properties }, { headers: hubspotHeaders });
     
     const contactId = response.data.id;
     console.log(`✅ Contato criado: ${contactId}`);
@@ -170,9 +180,7 @@ async function updateContact(contactId, properties) {
     
     const url = `${HUBSPOT_API_URL}/crm/v3/objects/contacts/${contactId}`;
     
-    await axios.patch(url, {
-      properties: properties
-    }, { headers: hubspotHeaders });
+    await axios.patch(url, { properties }, { headers: hubspotHeaders });
     
     console.log(`✅ Contato atualizado`);
     
@@ -183,7 +191,7 @@ async function updateContact(contactId, properties) {
 }
 
 /**
- * Cria deal MGM no pipeline
+ * Cria deal MGM
  */
 async function createDeal(contactId, phoneNormalized) {
   try {
@@ -195,7 +203,7 @@ async function createDeal(contactId, phoneNormalized) {
       properties: {
         dealname: `MGM - ${phoneNormalized}`,
         pipeline: '904463895',
-        mgm_phone_normalized: phoneNormalized,
+        deal_mgm_phone_normalized: phoneNormalized,
         dealstage: '1372198928'
       }
     }, { headers: hubspotHeaders });
@@ -206,7 +214,7 @@ async function createDeal(contactId, phoneNormalized) {
     
   } catch (err) {
     console.error('❌ Erro ao criar deal:', err.response?.data || err.message);
-    throw err;
+    return null; // Continuar mesmo se falhar
   }
 }
 
@@ -214,10 +222,7 @@ async function createDeal(contactId, phoneNormalized) {
 // FUNÇÃO PRINCIPAL
 // ============================================
 
-/**
- * Processa indicação: cria contato e deal
- */
-async function processarIndicacao(phoneRaw, name = null) {
+async function processarIndicacao(phoneRaw, name = null, origin = null, ownerId = null) {
   try {
     console.log(`\n${'='.repeat(50)}`);
     console.log(`🚀 PROCESSANDO INDICAÇÃO: ${phoneRaw}`);
@@ -232,18 +237,16 @@ async function processarIndicacao(phoneRaw, name = null) {
         phone: phoneRaw
       };
     }
-    console.log();
+    console.log(`✅ Telefone normalizado: ${phoneNormalized}\n`);
     
     // 2. BUSCAR CONTATO EXISTENTE
     let existingContact = await searchContactByPhone(phoneNormalized);
     console.log();
     
     let contactId, action;
-    let dealId = null;
-    let confidenceScore = 100;
     
     if (existingContact) {
-      // CONTATO JÁ EXISTE - APENAS ATUALIZAR
+      // ATUALIZAR CONTATO EXISTENTE
       action = 'updated';
       contactId = existingContact.id;
       
@@ -251,35 +254,49 @@ async function processarIndicacao(phoneRaw, name = null) {
         existingContact.properties.contact_mgm_indicator_count || 0
       );
       
-      await updateContact(contactId, {
+      const updateProperties = {
         contact_mgm_indicator_received: 'true',
         contact_mgm_indicator_date: new Date().toISOString().split('T')[0],
         contact_mgm_indicator_count: (currentCount + 1).toString(),
         contact_mgm_matching_confidence: 'High'
-      });
+      };
+
+      // Atualizar origem se fornecida
+      if (origin) {
+        updateProperties.contact__cross__source = origin;
+      }
+
+      // Atualizar proprietário se fornecido
+      if (ownerId) {
+        updateProperties.hubspot_owner_id = ownerId;
+      }
       
-      confidenceScore = 85;
+      await updateContact(contactId, updateProperties);
       
     } else {
-      // CONTATO NOVO - CRIAR CONTATO + DEAL
+      // CRIAR NOVO CONTATO
       action = 'created';
-      contactId = await createContact(phoneNormalized, name);
-      console.log();
+      contactId = await createContact(phoneNormalized, name, origin, ownerId);
+    }
+    
+    console.log();
+    
+    // 3. CRIAR DEAL MGM (apenas se for novo contato)
+    let dealId = null;
+    if (action === 'created') {
       dealId = await createDeal(contactId, phoneNormalized);
-      confidenceScore = 100;
     }
     
     console.log();
     console.log(`✅ SUCESSO! Indicação processada.\n`);
     
-    // RESPOSTA
+    // 4. RESPOSTA
     return {
       status: 'success',
       action: action,
       contact_id: contactId,
       deal_id: dealId,
       phone: phoneNormalized,
-      confidence_score: confidenceScore,
       message: `Indicação ${action === 'created' ? 'criada' : 'atualizada'} com sucesso!`
     };
     
@@ -302,16 +319,16 @@ async function processarIndicacao(phoneRaw, name = null) {
  * Processar indicação via JSON
  */
 app.post('/api/mgm', async (req, res) => {
-  const { phone, name } = req.body;
+  const { phone, name, origin, owner_id } = req.body;
   
   if (!phone) {
     return res.status(400).json({
       status: 'error',
-      message: 'Campo "phone" obrigatório. Exemplo: {"phone": "11 98765-4321"}'
+      message: 'Campo "phone" obrigatório'
     });
   }
   
-  const result = await processarIndicacao(phone, name);
+  const result = await processarIndicacao(phone, name, origin, owner_id);
   res.json(result);
 });
 
@@ -320,16 +337,16 @@ app.post('/api/mgm', async (req, res) => {
  * Processar indicação via query string (para testes rápidos)
  */
 app.get('/api/mgm', async (req, res) => {
-  const { phone, name } = req.query;
+  const { phone, name, origin, owner_id } = req.query;
   
   if (!phone) {
     return res.status(400).json({
       status: 'error',
-      message: 'Parâmetro "phone" obrigatório. Exemplo: /api/mgm?phone=11987654321&name=João'
+      message: 'Parâmetro "phone" obrigatório'
     });
   }
   
-  const result = await processarIndicacao(phone, name);
+  const result = await processarIndicacao(phone, name, origin, owner_id);
   res.json(result);
 });
 
@@ -341,63 +358,10 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    version: '1.2.0'
+    version: '1.3.0'
   });
 });
 
-/**
- * GET /
- * Homepage com informações
- */
-app.get('/', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>MGM Agent</title>
-      <style>
-        body { font-family: Arial; margin: 40px; background: #f5f5f5; }
-        h1 { color: #667eea; }
-        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        code { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; }
-        ul { line-height: 1.8; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>🤖 MGM Agent - HubSpot</h1>
-        <p><strong>Versão:</strong> 1.2.0</p>
-        <p><strong>Status:</strong> ✅ Online</p>
-        
-        <h2>📡 Endpoints:</h2>
-        <ul>
-          <li><code>POST /api/mgm</code> - Processar indicação (JSON)</li>
-          <li><code>GET /api/mgm?phone=11987654321</code> - Processar indicação (Query)</li>
-          <li><code>GET /health</code> - Status da aplicação</li>
-        </ul>
-        
-        <h2>🔄 Fluxo:</h2>
-        <ol>
-          <li>Cliente envia telefone via web ou API</li>
-          <li>Sistema normaliza e valida telefone</li>
-          <li>Busca contato existente no HubSpot</li>
-          <li>Se novo → cria contato + deal no pipeline MGM</li>
-          <li>Se existe → atualiza propriedades MGM</li>
-        </ol>
-        
-        <h2>📊 Properties Preenchidas:</h2>
-        <ul>
-          <li>contact_mgm_phone_normalized</li>
-          <li>contact_mgm_indicator_received</li>
-          <li>contact_mgm_indicator_date</li>
-          <li>contact_mgm_indicator_count</li>
-          <li>contact_mgm_matching_confidence</li>
-        </ul>
-      </div>
-    </body>
-    </html>
-  `);
-});
 
 // ============================================
 // START SERVER
@@ -406,15 +370,19 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════╗
-║  🤖 MGM AGENT v1.2.0 - RUNNING         ║
+║  🤖 MGM AGENT - RUNNING                ║
 ║  📍 http://localhost:${PORT}            ║
 ╚════════════════════════════════════════╝
 
 Endpoints:
   POST http://localhost:${PORT}/api/mgm
-  GET  http://localhost:${PORT}/api/mgm?phone=11987654321&name=João
+  GET  http://localhost:${PORT}/api/mgm?phone=11987654321
 
-Exemplo:
-  curl "http://localhost:${PORT}/api/mgm?phone=11987654321&name=João Silva"
+Features:
+  ✅ Processamento em lote
+  ✅ Normalização de telefone
+  ✅ Origem customizável
+  ✅ Proprietário atribuível
+  ✅ Rotação de proprietários
   `);
 });

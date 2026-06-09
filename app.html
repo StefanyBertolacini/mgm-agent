@@ -1,336 +1,587 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🤖 MGM Agent - HubSpot</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGM Agent - HubSpot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
 
-    .container {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      max-width: 600px;
-      width: 100%;
-      padding: 40px;
-    }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 700px;
+            width: 100%;
+            padding: 40px;
+        }
 
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-    .header h1 {
-      font-size: 28px;
-      color: #333;
-      margin-bottom: 8px;
-    }
+        .logo {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
 
-    .header p {
-      color: #666;
-      font-size: 14px;
-    }
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
 
-    .form-group {
-      margin-bottom: 20px;
-    }
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
 
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: #333;
-      font-weight: 500;
-      font-size: 14px;
-    }
+        .form-section {
+            margin-bottom: 25px;
+        }
 
-    textarea {
-      width: 100%;
-      padding: 15px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: 'Courier New', monospace;
-      resize: vertical;
-      min-height: 200px;
-      transition: border-color 0.3s;
-    }
+        .form-group {
+            margin-bottom: 20px;
+        }
 
-    textarea:focus {
-      outline: none;
-      border-color: #667eea;
-    }
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
 
-    .hint {
-      font-size: 12px;
-      color: #999;
-      margin-top: 5px;
-    }
+        .help-text {
+            color: #999;
+            font-size: 12px;
+            margin-top: 4px;
+        }
 
-    .button-group {
-      display: flex;
-      gap: 10px;
-      margin-top: 30px;
-    }
+        textarea, input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
 
-    button.submit-btn {
-      flex: 1;
-      padding: 14px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
+        textarea:focus, input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
 
-    button.submit-btn:hover {
-      transform: translateY(-2px);
-    }
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
 
-    button.submit-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
+        .owner-mode-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
 
-    button.clear-btn {
-      padding: 14px 20px;
-      background: #e0e0e0;
-      color: #333;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-    }
+        .toggle-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
 
-    button.clear-btn:hover {
-      background: #d0d0d0;
-    }
+        .toggle-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
 
-    .loading {
-      text-align: center;
-      padding: 20px;
-      display: none;
-    }
+        .owner-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
 
-    .loading.show {
-      display: block;
-    }
+        .owner-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
 
-    .spinner {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #667eea;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 10px;
-    }
+        .owner-checkbox:hover {
+            background: #e8e8f0;
+        }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+        .owner-checkbox input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
 
-    .results {
-      margin-top: 30px;
-      display: none;
-    }
+        .owner-checkbox label {
+            margin: 0;
+            font-weight: 500;
+            cursor: pointer;
+            flex: 1;
+        }
 
-    .results.show {
-      display: block;
-    }
+        .buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
 
-    .result-item {
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      border-left: 4px solid #667eea;
-      font-size: 13px;
-    }
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
 
-    .result-item.success {
-      background: #d4edda;
-      border-left-color: #28a745;
-      color: #155724;
-    }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
 
-    .result-item.error {
-      background: #f8d7da;
-      border-left-color: #dc3545;
-      color: #721c24;
-    }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
 
-    .summary {
-      margin-top: 15px;
-      padding: 15px;
-      background: #f5f5f5;
-      border-radius: 8px;
-      font-size: 14px;
-      color: #333;
-    }
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
 
-    .summary strong {
-      color: #667eea;
-    }
-  </style>
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .result-item {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .result-item.success {
+            background: #f0fdf4;
+            border-left-color: #22c55e;
+        }
+
+        .result-item.error {
+            background: #fef2f2;
+            border-left-color: #ef4444;
+        }
+
+        .result-phone {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .result-status {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .result-message {
+            font-size: 12px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #e0e0e0;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .icon {
+            font-size: 20px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🤖 MGM Agent</h1>
-      <p>Processe múltiplas indicações em lote</p>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🤖</div>
+            <h1>MGM Agent</h1>
+            <p class="subtitle">Processe múltiplas indicações em lote</p>
+        </div>
+
+        <form id="mgmForm">
+            <!-- SEÇÃO 1: TELEFONES -->
+            <div class="form-section">
+                <div class="form-group">
+                    <label><span class="icon">📱</span> Telefones</label>
+                    <textarea id="phones" placeholder="Cole um telefone por linha:&#10;11 98765-4321&#10;21 99999-8888&#10;85 98765-4321&#10;&#10;Ou com nome (opcional):&#10;11 98765-4321 - João Silva&#10;21 99999-8888 - Maria Santos" required></textarea>
+                    <div class="help-text">Um telefone por linha. Opcionalmente coloque &quot; - Nome&quot; após o telefone.</div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO 2: ORIGEM -->
+            <div class="form-section">
+                <div class="form-group">
+                    <label><span class="icon">🔗</span> Origem</label>
+                    <input type="text" id="origin" placeholder="Ex: Indicação MGM, Form Website, LinkedIn, Telefone Direto, etc">
+                    <div class="help-text">Campo livre - escreva a origem dos contatos</div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO 3: PROPRIETÁRIO -->
+            <div class="form-section">
+                <label><span class="icon">👤</span> Proprietário do Contato</label>
+                
+                <div class="owner-mode-toggle">
+                    <button type="button" class="toggle-btn active" data-mode="single">
+                        Um Proprietário
+                    </button>
+                    <button type="button" class="toggle-btn" data-mode="multiple">
+                        Múltiplos (Rotação)
+                    </button>
+                </div>
+
+                <!-- Modo: Um único proprietário -->
+                <div id="singleOwnerMode" class="form-group">
+                    <select id="singleOwner">
+                        <option value="">Selecione um proprietário</option>
+                        <option value="1996135921">Juan Albuquerque</option>
+                        <option value="76004207">Beatriz Cassiano</option>
+                        <option value="78826230">Miguel Marins</option>
+                        <option value="76004206">Victor Campioni</option>
+                        <option value="537405053">Newton Silva</option>
+                        <option value="741522075">Mariana Magalhães</option>
+                        <option value="277149482">Vinícius Fernandes</option>
+                        <option value="83252425">Eduardo Martins</option>
+                        <option value="82793698">André Fortes</option>
+                        <option value="86060512">Emílio Rocha</option>
+                        <option value="86819412">Rodrigo Brandão</option>
+                        <option value="82350545">Jessica Anacleto</option>
+                        <option value="81631288">Bruna Messias</option>
+                        <option value="505224976">Pedro Assunção</option>
+                        <option value="85357564">Sarah Roubaud</option>
+                        <option value="90532052">Stefany Bertolacini</option>
+                        <option value="87801244">Amauri Junior</option>
+                        <option value="77821966">Gabriel Gandra</option>
+                    </select>
+                </div>
+
+                <!-- Modo: Múltiplos proprietários com rotação -->
+                <div id="multipleOwnerMode" style="display: none;">
+                    <div class="help-text" style="margin-bottom: 10px;">Selecione 2 ou mais proprietários. Os contatos serão distribuídos entre eles.</div>
+                    <div class="owner-options" id="ownerCheckboxes">
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-1996135921" value="1996135921">
+                            <label for="owner-1996135921">Juan Albuquerque</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-76004207" value="76004207">
+                            <label for="owner-76004207">Beatriz Cassiano</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-78826230" value="78826230">
+                            <label for="owner-78826230">Miguel Marins</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-76004206" value="76004206">
+                            <label for="owner-76004206">Victor Campioni</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-537405053" value="537405053">
+                            <label for="owner-537405053">Newton Silva</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-741522075" value="741522075">
+                            <label for="owner-741522075">Mariana Magalhães</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-277149482" value="277149482">
+                            <label for="owner-277149482">Vinícius Fernandes</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-83252425" value="83252425">
+                            <label for="owner-83252425">Eduardo Martins</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-82793698" value="82793698">
+                            <label for="owner-82793698">André Fortes</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-86060512" value="86060512">
+                            <label for="owner-86060512">Emílio Rocha</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-86819412" value="86819412">
+                            <label for="owner-86819412">Rodrigo Brandão</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-82350545" value="82350545">
+                            <label for="owner-82350545">Jessica Anacleto</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-81631288" value="81631288">
+                            <label for="owner-81631288">Bruna Messias</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-505224976" value="505224976">
+                            <label for="owner-505224976">Pedro Assunção</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-85357564" value="85357564">
+                            <label for="owner-85357564">Sarah Roubaud</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-90532052" value="90532052">
+                            <label for="owner-90532052">Stefany Bertolacini</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-87801244" value="87801244">
+                            <label for="owner-87801244">Amauri Junior</label>
+                        </div>
+                        <div class="owner-checkbox">
+                            <input type="checkbox" id="owner-77821966" value="77821966">
+                            <label for="owner-77821966">Gabriel Gandra</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTÕES -->
+            <div class="buttons">
+                <button type="submit" class="btn-primary">
+                    <span>🚀</span> Processar
+                </button>
+                <button type="reset" class="btn-secondary">Limpar</button>
+            </div>
+
+            <!-- LOADING -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processando...</p>
+            </div>
+        </form>
+
+        <!-- RESULTADOS -->
+        <div id="results" class="results" style="display: none;">
+            <h2 style="margin-bottom: 15px; color: #333;">Resultados</h2>
+            <div id="resultsList"></div>
+        </div>
     </div>
 
-    <form id="form">
-      <div class="form-group">
-        <label for="phones">📞 Telefones</label>
-        <textarea 
-          id="phones"
-          placeholder="Cole um telefone por linha:&#10;11 98765-4321&#10;21 99999-8888&#10;85 98765-4321&#10;&#10;Ou com nome (opcional):&#10;11 98765-4321 - João Silva&#10;21 99999-8888 - Maria Santos"
-          required
-        ></textarea>
-        <div class="hint">Um telefone por linha. Opcionalmente coloque " - Nome" após o telefone.</div>
-      </div>
+    <script>
+        const form = document.getElementById('mgmForm');
+        const loading = document.getElementById('loading');
+        const resultsDiv = document.getElementById('results');
+        const resultsList = document.getElementById('resultsList');
+        const singleOwnerMode = document.getElementById('singleOwnerMode');
+        const multipleOwnerMode = document.getElementById('multipleOwnerMode');
+        const toggleBtns = document.querySelectorAll('.toggle-btn');
 
-      <div class="button-group">
-        <button type="submit" class="submit-btn">🚀 Processar</button>
-        <button type="button" class="clear-btn" onclick="clearForm()">Limpar</button>
-      </div>
-    </form>
+        let currentMode = 'single';
 
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
-      <p>Processando indicações...</p>
-    </div>
-
-    <div class="results" id="results">
-      <h3>📊 Resultados</h3>
-      <div id="resultsList"></div>
-      <div class="summary" id="summary"></div>
-    </div>
-  </div>
-
-  <script>
-    const form = document.getElementById('form');
-    const phonesTextarea = document.getElementById('phones');
-    const loading = document.getElementById('loading');
-    const results = document.getElementById('results');
-    const resultsList = document.getElementById('resultsList');
-    const summary = document.getElementById('summary');
-
-    function clearForm() {
-      form.reset();
-      results.classList.remove('show');
-      resultsList.innerHTML = '';
-      summary.innerHTML = '';
-    }
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const text = phonesTextarea.value.trim();
-      if (!text) {
-        alert('Cole pelo menos um telefone!');
-        return;
-      }
-
-      // Parsear linhas
-      const lines = text.split('\n').filter(line => line.trim());
-      const indicacoes = [];
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        
-        // Verificar se tem " - " para separar telefone e nome
-        if (trimmed.includes(' - ')) {
-          const [phone, name] = trimmed.split(' - ').map(x => x.trim());
-          if (phone) indicacoes.push({ phone, name: name || null });
-        } else {
-          if (trimmed) indicacoes.push({ phone: trimmed, name: null });
-        }
-      }
-
-      if (indicacoes.length === 0) {
-        alert('Cole pelo menos um telefone válido!');
-        return;
-      }
-
-      loading.classList.add('show');
-      results.classList.remove('show');
-      resultsList.innerHTML = '';
-
-      try {
-        let successCount = 0;
-        let errorCount = 0;
-
-        for (const ind of indicacoes) {
-          try {
-            const params = new URLSearchParams({
-              phone: ind.phone,
-              ...(ind.name && { name: ind.name })
+        // Toggle entre modo único e múltiplo
+        toggleBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const mode = btn.dataset.mode;
+                
+                toggleBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                currentMode = mode;
+                
+                if (mode === 'single') {
+                    singleOwnerMode.style.display = 'block';
+                    multipleOwnerMode.style.display = 'none';
+                } else {
+                    singleOwnerMode.style.display = 'none';
+                    multipleOwnerMode.style.display = 'block';
+                }
             });
+        });
 
-            const response = await fetch(`http://localhost:3000/api/mgm?${params}`);
-            const data = await response.json();
-
-            const resultItem = document.createElement('div');
-
-            if (data.status === 'success') {
-              successCount++;
-              resultItem.className = 'result-item success';
-              resultItem.innerHTML = `
-                ✅ <strong>${ind.name || ind.phone}</strong> - ${data.action === 'created' ? 'Criado' : 'Atualizado'} (ID: ${data.contact_id})
-              `;
-            } else {
-              errorCount++;
-              resultItem.className = 'result-item error';
-              resultItem.innerHTML = `
-                ❌ <strong>${ind.phone}</strong> - ${data.message}
-              `;
+        // Processar formulário
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const phonesText = document.getElementById('phones').value.trim();
+            const origin = document.getElementById('origin').value.trim();
+            
+            if (!phonesText) {
+                alert('Por favor, adicione pelo menos um telefone');
+                return;
             }
 
-            resultsList.appendChild(resultItem);
+            // Validar proprietário
+            let owners = [];
+            if (currentMode === 'single') {
+                const singleOwner = document.getElementById('singleOwner').value;
+                if (!singleOwner) {
+                    alert('Por favor, selecione um proprietário');
+                    return;
+                }
+                owners = [singleOwner];
+            } else {
+                const checkboxes = document.querySelectorAll('#ownerCheckboxes input[type="checkbox"]:checked');
+                owners = Array.from(checkboxes).map(cb => cb.value);
+                if (owners.length < 2) {
+                    alert('Por favor, selecione pelo menos 2 proprietários para rotação');
+                    return;
+                }
+            }
 
-          } catch (error) {
-            errorCount++;
-            const resultItem = document.createElement('div');
-            resultItem.className = 'result-item error';
-            resultItem.innerHTML = `
-              ❌ <strong>${ind.phone}</strong> - Erro: ${error.message}
-            `;
-            resultsList.appendChild(resultItem);
-          }
-        }
+            // Parsear telefones
+            const phones = phonesText.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
 
-        summary.innerHTML = `
-          <strong>Resumo:</strong> ${successCount} ✅ sucesso(s), ${errorCount} ❌ erro(s) de ${indicacoes.length} total(is)
-        `;
+            if (phones.length === 0) {
+                alert('Por favor, adicione pelo menos um telefone');
+                return;
+            }
 
-        results.classList.add('show');
+            // Mostrar loading
+            loading.style.display = 'block';
+            resultsDiv.style.display = 'none';
+            resultsList.innerHTML = '';
 
-      } finally {
-        loading.classList.remove('show');
-      }
-    });
-  </script>
+            try {
+                const results = [];
+                
+                for (let i = 0; i < phones.length; i++) {
+                    const phoneLine = phones[i];
+                    
+                    // Parse: "11 98765-4321" ou "11 98765-4321 - João Silva"
+                    let phone = phoneLine;
+                    let name = '';
+                    
+                    if (phoneLine.includes(' - ')) {
+                        const parts = phoneLine.split(' - ');
+                        phone = parts[0].trim();
+                        name = parts[1].trim();
+                    }
+
+                    // Determinar proprietário
+                    let owner;
+                    if (currentMode === 'single') {
+                        owner = owners[0];
+                    } else {
+                        // Rotação: i % owners.length
+                        owner = owners[i % owners.length];
+                    }
+
+                    // Fazer requisição
+                    const response = await fetch('/api/mgm', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            phone: phone,
+                            name: name,
+                            origin: origin || undefined,
+                            owner_id: owner
+                        })
+                    });
+
+                    const data = await response.json();
+                    results.push({
+                        phone: phone,
+                        name: name,
+                        ...data
+                    });
+                }
+
+                // Mostrar resultados
+                resultsList.innerHTML = results.map(r => {
+                    const isSuccess = r.status === 'success';
+                    const className = isSuccess ? 'success' : 'error';
+                    const nameText = r.name ? ` (${r.name})` : '';
+                    const actionText = r.action ? (r.action === 'created' ? 'Criado' : 'Atualizado') : '';
+                    const idText = r.contact_id ? ` | ID: ${r.contact_id}` : '';
+                    
+                    return `
+                        <div class="result-item ${className}">
+                            <div class="result-phone">${r.phone}${nameText}</div>
+                            <div class="result-status">
+                                ${isSuccess ? '✓' : '✗'} ${actionText}${idText}
+                            </div>
+                            <div class="result-message">${r.message}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                resultsDiv.style.display = 'block';
+
+            } catch (error) {
+                alert('Erro ao processar: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
