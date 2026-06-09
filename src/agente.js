@@ -104,7 +104,7 @@ async function findContact(normalizedPhone) {
       {
         filterGroups: [{
           filters: [{
-            propertyName: 'contact_mgm_phone_normalized',
+            propertyName: 'phone',  // ← CAMPO PADRÃO
             operator: 'EQ',
             value: normalizedPhone
           }]
