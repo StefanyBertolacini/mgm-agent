@@ -548,19 +548,10 @@
                         <span class="section-icon">📱</span>
                         <h2>Telefones</h2>
                     </div>
-                    <textarea id="phones" placeholder="Cole um telefone por linha:&#10;11 98765-4321&#10;21 99999-8888&#10;&#10;Ou com nome (opcional):&#10;11 98765-4321 - João Silva" required></textarea>
+                    <textarea id="phones" placeholder="Cole um telefone por linha:&#10;11 98765-4321 - joao@email.com - João Silva&#10;21 99999-8888 - Maria Silva&#10;85 98888-7777" required></textarea>
                     <div class="section-help">Um telefone por linha. Opcionalmente coloque &quot; - Nome&quot; após o telefone.</div>
                 </div>
-
-                <!-- ORIGEM -->
-                <div class="form-section">
-                    <div class="section-title">
-                        <span class="section-icon">🔗</span>
-                        <h2>Origem</h2>
-                    </div>
-                    <input type="text" id="origin" placeholder="Ex: LinkedIn, Indicação Capim, Telefone Direto...">
-                    <div class="section-help">Descreva a origem dos contatos</div>
-                </div>
+                
 
                 <!-- PROPRIETÁRIO -->
                 <div class="form-section">
@@ -683,6 +674,75 @@
                     </div>
                 </div>
 
+                <!-- CAMPOS ADICIONAIS -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <span class="section-icon">⚙️</span>
+                        <h2>Informações Adicionais (Opcional)</h2>
+                    </div>
+
+                    <!-- ORIGEM -->
+                    <label for="origem" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Origem</label>
+                    <select id="origem">
+                        <option value="">-- Selecione --</option>
+                        <option value="Inbound">Inbound</option>
+                        <option value="Outbound">Outbound</option>
+                        <option value="Eventos">Eventos</option>
+                        <option value="Parcerias">Parcerias</option>
+                        <option value="Indicação" selected>Indicação</option>
+                        <option value="Redes">Redes</option>
+                        <option value="Afiliados">Afiliados</option>
+                        <option value="Dental Office">Dental Office</option>
+                        <option value="Dental Office - Maquininha">Dental Office - Maquininha</option>
+                    </select>
+
+                    <!-- SUBSOURCE INDIRECT CHANNEL MGM -->
+                    <label for="subsourceIndirectChannelMgm" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Tipo de Assinante</label>
+                    <select id="subsourceIndirectChannelMgm">
+                        <option value="">-- Selecione --</option>
+                        <option value="Assinantes">Assinantes</option>
+                        <option value="Não assinantes">Não assinantes</option>
+                    </select>
+
+                    <!-- SUBSOURCE MGM DETAILS -->
+                    <label for="subsourceMgmDetails" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Detalhe MGM</label>
+                    <select id="subsourceMgmDetails">
+                        <option value="">-- Selecione --</option>
+                        <option value="Produto">Produto</option>
+                        <option value="CIOSP">CIOSP</option>
+                        <option value="Capim Conecta">Capim Conecta</option>
+                        <option value="In">In</option>
+                        <option value="High-touch">High-touch</option>
+                        <option value="Low-touch">Low-touch</option>
+                        <option value="Público Geral">Público Geral</option>
+                        <option value="Evento">Evento</option>
+                        <option value="Capiners (ex-vendas)">Capiners (ex-vendas)</option>
+                    </select>
+
+                    <!-- ACQUISITION METHODS INDIRECT CHANNEL -->
+                    <label for="acquisitionMethodsIndirectChannel" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Método de Aquisição</label>
+                    <select id="acquisitionMethodsIndirectChannel">
+                        <option value="">-- Selecione --</option>
+                        <option value="Indicação">Indicação</option>
+                        <option value="Evento">Evento</option>
+                        <option value="Landing-page">Landing-page</option>
+                        <option value="Lista-fria">Lista-fria</option>
+                        <option value="Formulário">Formulário</option>
+                        <option value="Link de indicação">Link de indicação</option>
+                        <option value="NPS">NPS</option>
+                        <option value="Userguiding">Userguiding</option>
+                        <option value="Formulário Interno">Formulário Interno</option>
+                        <option value="Treinamento CS">Treinamento CS</option>
+                        <option value="Blip">Blip</option>
+                        <option value="Disparo Manual">Disparo Manual</option>
+                        <option value="Mídia Paga">Mídia Paga</option>
+                        <option value="CIOSP">CIOSP</option>
+                        <option value="Capim Conecta">Capim Conecta</option>
+                        <option value="In">In</option>
+                        <option value="Slack">Slack</option>
+                    </select>
+                </div>
+
                 <!-- BOTÕES -->
                 <div class="button-group">
                     <button type="submit" class="btn-primary">
@@ -743,7 +803,10 @@
             e.preventDefault();
             
             const phonesText = document.getElementById('phones').value.trim();
-            const origin = document.getElementById('origin').value.trim();
+            const origem = document.getElementById('origem').value;
+            const subsourceIndirectChannelMgm = document.getElementById('subsourceIndirectChannelMgm').value;
+            const subsourceMgmDetails = document.getElementById('subsourceMgmDetails').value;
+            const acquisitionMethodsIndirectChannel = document.getElementById('acquisitionMethodsIndirectChannel').value;
             
             if (!phonesText) {
                 alert('Por favor, adicione pelo menos um telefone');
@@ -787,13 +850,29 @@
                     const phoneLine = phones[i];
                     
                     let phone = phoneLine;
+                    let email = undefined;
                     let name = '';
                     
                     if (phoneLine.includes(' - ')) {
-                        const parts = phoneLine.split(' - ');
-                        phone = parts[0].trim();
-                        name = parts[1].trim();
+                        const parts = phoneLine.split(' - ').map(p => p.trim());
+                        phone = parts[0] || '';
+                        
+                       if (parts.length === 3) {
+                        // numero - email - nome
+                        email = parts[1] || undefined;
+                        name = parts[2] || '';
+                    } else if (parts.length === 2) {
+                        // numero - ??? (email ou nome?)
+                        // // Se contém @, é email; senão é nome
+                        if (parts[1].includes('@')) {
+                            email = parts[1] || undefined;
+                            name = '';
+                        } else {
+                            name = parts[1] || '';
+                            email = undefined;
+                        }
                     }
+                }
 
                     let owner;
                     if (currentMode === 'single') {
@@ -807,8 +886,12 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             phone: phone,
+                            email: email,
                             name: name,
-                            origin: origin || undefined,
+                            origem: origem || undefined,
+                            subsourceIndirectChannelMgm: subsourceIndirectChannelMgm || undefined,
+                            subsourceMgmDetails: subsourceMgmDetails || undefined,
+                            acquisitionMethodsIndirectChannel: acquisitionMethodsIndirectChannel || undefined,
                             owner_id: owner
                         })
                     });

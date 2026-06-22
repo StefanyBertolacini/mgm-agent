@@ -97,18 +97,38 @@ Features:
 // ================================================
 
 // Busca contato existente no HubSpot
-async function findContact(normalizedPhone) {
+async function findContact(normalizedPhone, email) {
   try {
+    let filterGroups = [];
+    
+    // Filtro por telefone
+    if (normalizedPhone) {
+      filterGroups.push({
+        filters: [{
+          propertyName: 'phone',
+          operator: 'EQ',
+          value: normalizedPhone
+        }]
+      });
+    }
+    
+    // Filtro por e-mail
+    if (email) {
+      filterGroups.push({
+        filters: [{
+          propertyName: 'email',
+          operator: 'EQ',
+          value: email
+        }]
+      });
+    }
+
+    if (filterGroups.length === 0) return null;
+
     const response = await axios.post(
       'https://api.hubapi.com/crm/v3/objects/contacts/search',
       {
-        filterGroups: [{
-          filters: [{
-            propertyName: 'phone',  // ← CAMPO PADRÃO
-            operator: 'EQ',
-            value: normalizedPhone
-          }]
-        }],
+        filterGroups: filterGroups,
         limit: 1
       },
       { headers: hubspotHeaders }
@@ -122,21 +142,45 @@ async function findContact(normalizedPhone) {
 }
 
 // Cria novo contato no HubSpot
-async function createContact(normalizedPhone, name, origin, ownerId) {
+async function createContact(normalizedPhone, email, name, origem, subsourceIndirectChannelMgm, subsourceMgmDetails, acquisitionMethodsIndirectChannel, ownerId) {
   try {
+    const properties = {
+      firstname: name || 'Contato MGM',
+      contact_mgm_indicator_received: 'true',
+      contact_mgm_indicator_date: new Date().toISOString().split('T')[0],
+      hubspot_owner_id: ownerId
+    };
+
+    // Adiciona telefone se fornecido
+    if (normalizedPhone) {
+      properties.phone = normalizedPhone;
+      properties.contact_mgm_phone_normalized = normalizedPhone;
+    }
+
+    // Adiciona e-mail se fornecido
+    if (email) {
+      properties.email = email;
+    }
+
+    // Adiciona origem (obrigatório, mas com default)
+    properties.origem = origem || 'Indicação';
+
+    // Adiciona campos opcionais
+    if (subsourceIndirectChannelMgm) {
+      properties.contact_cross_subsource_indirect_chanel_mgm = subsourceIndirectChannelMgm;
+    }
+
+    if (subsourceMgmDetails) {
+      properties.contact_cross_subsource_mgm_details = subsourceMgmDetails;
+    }
+
+    if (acquisitionMethodsIndirectChannel) {
+      properties.contact_cross_acquisition_methods_indirect_chanel = acquisitionMethodsIndirectChannel;
+    }
+
     const response = await axios.post(
       'https://api.hubapi.com/crm/v3/objects/contacts',
-      {
-        properties: {
-          phone: normalizedPhone,
-          firstname: name || 'Contato MGM',
-          contact_mgm_phone_normalized: normalizedPhone,
-          contact_mgm_indicator_received: 'true',
-          contact_mgm_indicator_date: new Date().toISOString().split('T')[0],
-          contact__cross__source: origin || 'MGM',
-          hubspot_owner_id: ownerId
-        }
-      },
+      { properties },
       { headers: hubspotHeaders }
     );
 
@@ -156,17 +200,61 @@ async function createContact(normalizedPhone, name, origin, ownerId) {
 }
 
 // Atualiza contato existente
-async function updateContact(contactId, origin, ownerId) {
+async function updateContact(contactId, normalizedPhone, email, name, origem, subsourceIndirectChannelMgm, subsourceMgmDetails, acquisitionMethodsIndirectChannel, ownerId) {
   try {
+    const properties = {};
+
+    // Adiciona telefone se fornecido
+    if (normalizedPhone) {
+      properties.phone = normalizedPhone;
+    }
+
+    // Adiciona e-mail se fornecido
+    if (email) {
+      properties.email = email;
+    }
+
+    // Adiciona nome se fornecido
+    if (name) {
+      properties.firstname = name;
+    }
+
+    // Adiciona origem se fornecida
+    if (origem) {
+      properties.origem = origem;
+    }
+
+    // Adiciona campos opcionais
+    if (subsourceIndirectChannelMgm) {
+      properties.contact_cross_subsource_indirect_chanel_mgm = subsourceIndirectChannelMgm;
+    }
+
+    if (subsourceMgmDetails) {
+      properties.contact_cross_subsource_mgm_details = subsourceMgmDetails;
+    }
+
+    if (acquisitionMethodsIndirectChannel) {
+      properties.contact_cross_acquisition_methods_indirect_chanel = acquisitionMethodsIndirectChannel;
+    }
+
+    // Adiciona owner se fornecido
+    if (ownerId) {
+      properties.hubspot_owner_id = ownerId;
+    }
+
+    // Se não houver nada para atualizar, retorna sucesso
+    if (Object.keys(properties).length === 0) {
+      return {
+        contact_id: contactId,
+        action: 'updated',
+        status: 'success',
+        message: 'Contato já existente (nenhuma mudança)'
+      };
+    }
+
     const response = await axios.patch(
       `https://api.hubapi.com/crm/v3/objects/contacts/${contactId}`,
-      {
-        properties: {
-          contact_mgm_indicator_count: '1',
-          contact__cross__source: origin || 'MGM',
-          hubspot_owner_id: ownerId
-        }
-      },
+      { properties },
       { headers: hubspotHeaders }
     );
 
@@ -219,45 +307,78 @@ async function createDeal(contactId, normalizedPhone, ownerId) {
 
 app.post('/api/mgm', async (req, res) => {
   try {
-    const { phone, name, origin, owner_id } = req.body;
+    const { 
+      phone, 
+      email, 
+      name, 
+      origem, 
+      subsourceIndirectChannelMgm, 
+      subsourceMgmDetails, 
+      acquisitionMethodsIndirectChannel, 
+      owner_id 
+    } = req.body;
 
-    if (!phone) {
+    // Validação: telefone OU email obrigatório
+    if (!phone && !email) {
       return res.status(400).json({
         status: 'error',
-        message: 'Telefone é obrigatório'
+        message: 'Telefone ou e-mail é obrigatório'
       });
     }
 
-    const normalizedPhone = normalizePhone(phone);
+    const normalizedPhone = phone ? normalizePhone(phone) : null;
 
-    if (!normalizedPhone) {
+    // Se tiver telefone mas for inválido, retorna erro
+    if (phone && !normalizedPhone) {
       return res.status(400).json({
         status: 'error',
         message: 'Telefone inválido'
       });
     }
 
-    // Busca contato existente
-    const existingContact = await findContact(normalizedPhone);
+    // Busca contato existente (por telefone E/OU email)
+    const existingContact = await findContact(normalizedPhone, email);
 
     let result;
 
     if (existingContact) {
       // Atualiza contato existente
-      result = await updateContact(existingContact.id, origin, owner_id);
+      result = await updateContact(
+        existingContact.id, 
+        normalizedPhone, 
+        email, 
+        name, 
+        origem, 
+        subsourceIndirectChannelMgm, 
+        subsourceMgmDetails, 
+        acquisitionMethodsIndirectChannel, 
+        owner_id
+      );
     } else {
       // Cria novo contato
-      result = await createContact(normalizedPhone, name, origin, owner_id);
+      result = await createContact(
+        normalizedPhone, 
+        email, 
+        name, 
+        origem, 
+        subsourceIndirectChannelMgm, 
+        subsourceMgmDetails, 
+        acquisitionMethodsIndirectChannel, 
+        owner_id
+      );
     }
 
     if (result.status === 'success') {
-      // Cria deal
-      await createDeal(result.contact_id, normalizedPhone, owner_id);
+      // Cria deal se tiver telefone normalizado
+      if (normalizedPhone) {
+        await createDeal(result.contact_id, normalizedPhone, owner_id);
+      }
     }
 
     return res.json({
       ...result,
       phone: normalizedPhone,
+      email: email || null,
       name: name || null
     });
   } catch (error) {
@@ -265,7 +386,8 @@ app.post('/api/mgm', async (req, res) => {
     return res.status(500).json({
       status: 'error',
       message: 'Erro interno ao processar indicação',
-      phone: req.body.phone
+      phone: req.body.phone,
+      email: req.body.email
     });
   }
 });
@@ -276,45 +398,78 @@ app.post('/api/mgm', async (req, res) => {
 
 app.get('/api/mgm', async (req, res) => {
   try {
-    const { phone, name, origin, owner_id } = req.query;
+    const { 
+      phone, 
+      email, 
+      name, 
+      origem, 
+      subsourceIndirectChannelMgm, 
+      subsourceMgmDetails, 
+      acquisitionMethodsIndirectChannel, 
+      owner_id 
+    } = req.query;
 
-    if (!phone) {
+    // Validação: telefone OU email obrigatório
+    if (!phone && !email) {
       return res.status(400).json({
         status: 'error',
-        message: 'Telefone é obrigatório'
+        message: 'Telefone ou e-mail é obrigatório'
       });
     }
 
-    const normalizedPhone = normalizePhone(phone);
+    const normalizedPhone = phone ? normalizePhone(phone) : null;
 
-    if (!normalizedPhone) {
+    // Se tiver telefone mas for inválido, retorna erro
+    if (phone && !normalizedPhone) {
       return res.status(400).json({
         status: 'error',
         message: 'Telefone inválido'
       });
     }
 
-    // Busca contato existente
-    const existingContact = await findContact(normalizedPhone);
+    // Busca contato existente (por telefone E/OU email)
+    const existingContact = await findContact(normalizedPhone, email);
 
     let result;
 
     if (existingContact) {
       // Atualiza contato existente
-      result = await updateContact(existingContact.id, origin, owner_id);
+      result = await updateContact(
+        existingContact.id, 
+        normalizedPhone, 
+        email, 
+        name, 
+        origem, 
+        subsourceIndirectChannelMgm, 
+        subsourceMgmDetails, 
+        acquisitionMethodsIndirectChannel, 
+        owner_id
+      );
     } else {
       // Cria novo contato
-      result = await createContact(normalizedPhone, name, origin, owner_id);
+      result = await createContact(
+        normalizedPhone, 
+        email, 
+        name, 
+        origem, 
+        subsourceIndirectChannelMgm, 
+        subsourceMgmDetails, 
+        acquisitionMethodsIndirectChannel, 
+        owner_id
+      );
     }
 
     if (result.status === 'success') {
-      // Cria deal
-      await createDeal(result.contact_id, normalizedPhone, owner_id);
+      // Cria deal se tiver telefone normalizado
+      if (normalizedPhone) {
+        await createDeal(result.contact_id, normalizedPhone, owner_id);
+      }
     }
 
     return res.json({
       ...result,
       phone: normalizedPhone,
+      email: email || null,
       name: name || null
     });
   } catch (error) {
@@ -322,7 +477,8 @@ app.get('/api/mgm', async (req, res) => {
     return res.status(500).json({
       status: 'error',
       message: 'Erro interno ao processar indicação',
-      phone: req.query.phone
+      phone: req.query.phone,
+      email: req.query.email
     });
   }
 });
