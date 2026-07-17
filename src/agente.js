@@ -89,6 +89,7 @@ Features:
   ✅ Origem customizável
   ✅ Proprietário atribuível
   ✅ Rotação de proprietários
+  ✅ Propriedades MGM completas
 `);
 });
 
@@ -146,15 +147,20 @@ async function createContact(normalizedPhone, email, name, origem, subsourceIndi
   try {
     const properties = {
       firstname: name || 'Contato MGM',
+      
+      // ✅ PROPRIEDADES MGM - CRIAÇÃO
       contact_mgm_indicator_received: 'true',
       contact_mgm_indicator_date: new Date().toISOString().split('T')[0],
+      contact_mgm_indicator_count: '1',  // ✅ ADICIONADO: Começa com 1
+      
+      // Owner
       hubspot_owner_id: ownerId
     };
 
     // Adiciona telefone se fornecido
     if (normalizedPhone) {
       properties.phone = normalizedPhone;
-      properties.contact_mgm_phone_normalized = normalizedPhone;
+      properties.contact_mgm_phone_normalized = normalizedPhone;  // ✅ Normalizado
     }
 
     // Adiciona e-mail se fornecido
@@ -162,8 +168,10 @@ async function createContact(normalizedPhone, email, name, origem, subsourceIndi
       properties.email = email;
     }
 
-    // Adiciona origem (obrigatório, mas com default)
-    properties.origem = origem || 'Indicação';
+    // ✅ Adiciona origem com nome correto
+    if (origem) {
+      properties.contact__cross__source = origem;  // ✅ Nome da propriedade corrigido
+    }
 
     // Adiciona campos opcionais
     if (subsourceIndirectChannelMgm) {
@@ -199,14 +207,35 @@ async function createContact(normalizedPhone, email, name, origem, subsourceIndi
   }
 }
 
-// Atualiza contato existente
+// ✅ CORRIGIDO: Atualiza contato existente COM propriedades MGM
 async function updateContact(contactId, normalizedPhone, email, name, origem, subsourceIndirectChannelMgm, subsourceMgmDetails, acquisitionMethodsIndirectChannel, ownerId) {
   try {
     const properties = {};
 
+    // ✅ PROPRIEDADES MGM - ATUALIZAÇÃO
+    // Sempre atualizar a data
+    properties.contact_mgm_indicator_date = new Date().toISOString().split('T')[0];
+    
+    // ✅ Incrementar contador de indicações
+    // Primeiro, busca o valor atual do contador
+    try {
+      const contactResponse = await axios.get(
+        `https://api.hubapi.com/crm/v3/objects/contacts/${contactId}?properties=contact_mgm_indicator_count`,
+        { headers: hubspotHeaders }
+      );
+      
+      const currentCount = contactResponse.data.properties.contact_mgm_indicator_count;
+      const newCount = currentCount ? (parseInt(currentCount) + 1).toString() : '1';
+      properties.contact_mgm_indicator_count = newCount;
+    } catch (err) {
+      // Se não conseguir buscar, coloca 1
+      properties.contact_mgm_indicator_count = '1';
+    }
+
     // Adiciona telefone se fornecido
     if (normalizedPhone) {
       properties.phone = normalizedPhone;
+      properties.contact_mgm_phone_normalized = normalizedPhone;  // ✅ Sempre atualizar
     }
 
     // Adiciona e-mail se fornecido
@@ -219,9 +248,9 @@ async function updateContact(contactId, normalizedPhone, email, name, origem, su
       properties.firstname = name;
     }
 
-    // Adiciona origem se fornecida
+    // ✅ Adiciona origem com nome correto
     if (origem) {
-      properties.origem = origem;
+      properties.contact__cross__source = origem;  // ✅ Nome da propriedade corrigido
     }
 
     // Adiciona campos opcionais
@@ -491,6 +520,6 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    version: '1.3.0'
+    version: '1.3.1'
   });
 });
