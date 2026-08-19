@@ -86,7 +86,7 @@ Endpoints:
 Features:
   ✅ Processamento em lote
   ✅ Normalização de telefone
-  ✅ Origem customizável
+  ✅ Internal Source customizável
   ✅ Proprietário atribuível
   ✅ Rotação de proprietários
 `);
@@ -142,7 +142,24 @@ async function findContact(normalizedPhone, email) {
 }
 
 // Cria novo contato no HubSpot
-async function createContact(normalizedPhone, email, name, origem, subsourceIndirectChannelMgm, subsourceMgmDetails, acquisitionMethodsIndirectChannel, ownerId) {
+async function createContact(data) {
+  const {
+    normalizedPhone,
+    email,
+    name,
+    internalSource,
+    subsourceIndirectChannelMgm,
+    subsourceMgmDetails,
+    acquisitionMethodsIndirectChannel,
+    nomeDoParceiro,
+    cupomDoParceiro,
+    nomeDoEventoDeOrigem,
+    equipeResponsavel,
+    motivosDeInteresse,
+    interesseEmParceria,
+    ownerId
+  } = data;
+
   try {
     const properties = {
       firstname: name || 'Contato MGM',
@@ -162,10 +179,12 @@ async function createContact(normalizedPhone, email, name, origem, subsourceIndi
       properties.email = email;
     }
 
-    // Adiciona origem (obrigatório, mas com default)
-    properties.origem = origem || 'Indicação';
+    // Adiciona internal_source se fornecida
+    if (internalSource) {
+      properties.internal_source = internalSource;
+    }
 
-    // Adiciona campos opcionais
+    // Campos exibidos quando internal_source = "Indicação Externa"
     if (subsourceIndirectChannelMgm) {
       properties.contact_cross_subsource_indirect_chanel_mgm = subsourceIndirectChannelMgm;
     }
@@ -176,6 +195,33 @@ async function createContact(normalizedPhone, email, name, origem, subsourceIndi
 
     if (acquisitionMethodsIndirectChannel) {
       properties.contact_cross_acquisition_methods_indirect_chanel = acquisitionMethodsIndirectChannel;
+    }
+
+    // Campos exibidos quando internal_source = "Parceiro"
+    if (nomeDoParceiro) {
+      properties.parcerias__nome_do_parceiro = nomeDoParceiro;
+    }
+
+    if (cupomDoParceiro) {
+      properties.cupom_do_parceiro = cupomDoParceiro;
+    }
+
+    // Campo exibido quando internal_source = "Eventos"
+    if (nomeDoEventoDeOrigem) {
+      properties.nome_do_evento_de_origem = nomeDoEventoDeOrigem;
+    }
+
+    // Campos fixos, exibidos independentemente da internal_source
+    if (equipeResponsavel) {
+      properties.equipe_do_responsavel_pelo_preenchimento_do_formulario = equipeResponsavel;
+    }
+
+    if (motivosDeInteresse) {
+      properties.formularios__motivos_de_interesse = motivosDeInteresse;
+    }
+
+    if (interesseEmParceria) {
+      properties.contact_mkt_interest_in_partnership = interesseEmParceria;
     }
 
     const response = await axios.post(
@@ -200,7 +246,24 @@ async function createContact(normalizedPhone, email, name, origem, subsourceIndi
 }
 
 // Atualiza contato existente
-async function updateContact(contactId, normalizedPhone, email, name, origem, subsourceIndirectChannelMgm, subsourceMgmDetails, acquisitionMethodsIndirectChannel, ownerId) {
+async function updateContact(contactId, data) {
+  const {
+    normalizedPhone,
+    email,
+    name,
+    internalSource,
+    subsourceIndirectChannelMgm,
+    subsourceMgmDetails,
+    acquisitionMethodsIndirectChannel,
+    nomeDoParceiro,
+    cupomDoParceiro,
+    nomeDoEventoDeOrigem,
+    equipeResponsavel,
+    motivosDeInteresse,
+    interesseEmParceria,
+    ownerId
+  } = data;
+
   try {
     const properties = {};
 
@@ -223,12 +286,12 @@ async function updateContact(contactId, normalizedPhone, email, name, origem, su
       properties.firstname = name;
     }
 
-    // Adiciona origem se fornecida
-    if (origem) {
-      properties.origem = origem;
+    // Adiciona internal_source se fornecida
+    if (internalSource) {
+      properties.internal_source = internalSource;
     }
 
-    // Adiciona campos opcionais
+    // Campos exibidos quando internal_source = "Indicação Externa"
     if (subsourceIndirectChannelMgm) {
       properties.contact_cross_subsource_indirect_chanel_mgm = subsourceIndirectChannelMgm;
     }
@@ -239,6 +302,33 @@ async function updateContact(contactId, normalizedPhone, email, name, origem, su
 
     if (acquisitionMethodsIndirectChannel) {
       properties.contact_cross_acquisition_methods_indirect_chanel = acquisitionMethodsIndirectChannel;
+    }
+
+    // Campos exibidos quando internal_source = "Parceiro"
+    if (nomeDoParceiro) {
+      properties.parcerias__nome_do_parceiro = nomeDoParceiro;
+    }
+
+    if (cupomDoParceiro) {
+      properties.cupom_do_parceiro = cupomDoParceiro;
+    }
+
+    // Campo exibido quando internal_source = "Eventos"
+    if (nomeDoEventoDeOrigem) {
+      properties.nome_do_evento_de_origem = nomeDoEventoDeOrigem;
+    }
+
+    // Campos fixos, exibidos independentemente da internal_source
+    if (equipeResponsavel) {
+      properties.equipe_do_responsavel_pelo_preenchimento_do_formulario = equipeResponsavel;
+    }
+
+    if (motivosDeInteresse) {
+      properties.formularios__motivos_de_interesse = motivosDeInteresse;
+    }
+
+    if (interesseEmParceria) {
+      properties.contact_mkt_interest_in_partnership = interesseEmParceria;
     }
 
     // Adiciona owner se fornecido
@@ -311,15 +401,21 @@ async function createDeal(contactId, normalizedPhone, ownerId) {
 
 app.post('/api/mgm', async (req, res) => {
   try {
-    const { 
-      phone, 
-      email, 
-      name, 
-      origem, 
-      subsourceIndirectChannelMgm, 
-      subsourceMgmDetails, 
-      acquisitionMethodsIndirectChannel, 
-      owner_id 
+    const {
+      phone,
+      email,
+      name,
+      internal_source,
+      subsourceIndirectChannelMgm,
+      subsourceMgmDetails,
+      acquisitionMethodsIndirectChannel,
+      nomeDoParceiro,
+      cupomDoParceiro,
+      nomeDoEventoDeOrigem,
+      equipeResponsavel,
+      motivosDeInteresse,
+      interesseEmParceria,
+      owner_id
     } = req.body;
 
     // Validação: telefone OU email obrigatório
@@ -343,33 +439,31 @@ app.post('/api/mgm', async (req, res) => {
     // Busca contato existente (por telefone E/OU email)
     const existingContact = await findContact(normalizedPhone, email);
 
+    const contactData = {
+      normalizedPhone,
+      email,
+      name,
+      internalSource: internal_source,
+      subsourceIndirectChannelMgm,
+      subsourceMgmDetails,
+      acquisitionMethodsIndirectChannel,
+      nomeDoParceiro,
+      cupomDoParceiro,
+      nomeDoEventoDeOrigem,
+      equipeResponsavel,
+      motivosDeInteresse,
+      interesseEmParceria,
+      ownerId: owner_id
+    };
+
     let result;
 
     if (existingContact) {
       // Atualiza contato existente
-      result = await updateContact(
-        existingContact.id, 
-        normalizedPhone, 
-        email, 
-        name, 
-        origem, 
-        subsourceIndirectChannelMgm, 
-        subsourceMgmDetails, 
-        acquisitionMethodsIndirectChannel, 
-        owner_id
-      );
+      result = await updateContact(existingContact.id, contactData);
     } else {
       // Cria novo contato
-      result = await createContact(
-        normalizedPhone, 
-        email, 
-        name, 
-        origem, 
-        subsourceIndirectChannelMgm, 
-        subsourceMgmDetails, 
-        acquisitionMethodsIndirectChannel, 
-        owner_id
-      );
+      result = await createContact(contactData);
     }
 
     if (result.status === 'success') {
@@ -402,15 +496,21 @@ app.post('/api/mgm', async (req, res) => {
 
 app.get('/api/mgm', async (req, res) => {
   try {
-    const { 
-      phone, 
-      email, 
-      name, 
-      origem, 
-      subsourceIndirectChannelMgm, 
-      subsourceMgmDetails, 
-      acquisitionMethodsIndirectChannel, 
-      owner_id 
+    const {
+      phone,
+      email,
+      name,
+      internal_source,
+      subsourceIndirectChannelMgm,
+      subsourceMgmDetails,
+      acquisitionMethodsIndirectChannel,
+      nomeDoParceiro,
+      cupomDoParceiro,
+      nomeDoEventoDeOrigem,
+      equipeResponsavel,
+      motivosDeInteresse,
+      interesseEmParceria,
+      owner_id
     } = req.query;
 
     // Validação: telefone OU email obrigatório
@@ -434,33 +534,31 @@ app.get('/api/mgm', async (req, res) => {
     // Busca contato existente (por telefone E/OU email)
     const existingContact = await findContact(normalizedPhone, email);
 
+    const contactData = {
+      normalizedPhone,
+      email,
+      name,
+      internalSource: internal_source,
+      subsourceIndirectChannelMgm,
+      subsourceMgmDetails,
+      acquisitionMethodsIndirectChannel,
+      nomeDoParceiro,
+      cupomDoParceiro,
+      nomeDoEventoDeOrigem,
+      equipeResponsavel,
+      motivosDeInteresse,
+      interesseEmParceria,
+      ownerId: owner_id
+    };
+
     let result;
 
     if (existingContact) {
       // Atualiza contato existente
-      result = await updateContact(
-        existingContact.id, 
-        normalizedPhone, 
-        email, 
-        name, 
-        origem, 
-        subsourceIndirectChannelMgm, 
-        subsourceMgmDetails, 
-        acquisitionMethodsIndirectChannel, 
-        owner_id
-      );
+      result = await updateContact(existingContact.id, contactData);
     } else {
       // Cria novo contato
-      result = await createContact(
-        normalizedPhone, 
-        email, 
-        name, 
-        origem, 
-        subsourceIndirectChannelMgm, 
-        subsourceMgmDetails, 
-        acquisitionMethodsIndirectChannel, 
-        owner_id
-      );
+      result = await createContact(contactData);
     }
 
     if (result.status === 'success') {

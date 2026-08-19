@@ -678,68 +678,185 @@
                 <div class="form-section">
                     <div class="section-title">
                         <span class="section-icon">⚙️</span>
-                        <h2>Informações Adicionais (Opcional)</h2>
+                        <h2>Informações Adicionais</h2>
                     </div>
 
-                    <!-- ORIGEM -->
-                    <label for="origem" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Origem</label>
-                    <select id="origem">
-                        <option value="">-- Selecione --</option>
-                        <option value="Inbound">Inbound</option>
-                        <option value="Outbound">Outbound</option>
+                    <!-- INTERNAL SOURCE (exibido como "Origem" no HTML; a propriedade no HubSpot continua sendo internal_source) -->
+                    <label for="internal_source" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Origem</label>
+                    <select id="internal_source">
+                        <option value="" selected>-- Selecione --</option>
+                        <option value="Instagram">Instagram</option>
+                        <option value="Facebook">Facebook</option>
+                        <option value="WhatsApp / Telefone Site">WhatsApp / Telefone Site</option>
+                        <option value="Indicação Interna">Indicação Interna</option>
+                        <option value="Reativação Inbound">Reativação Inbound</option>
+                        <option value="Indicação Externa">Indicação Externa</option>
+                        <option value="Lista Outbound">Outbound</option>
                         <option value="Eventos">Eventos</option>
-                        <option value="Parcerias">Parcerias</option>
-                        <option value="Indicação" selected>Indicação</option>
-                        <option value="Redes">Redes</option>
-                        <option value="Afiliados">Afiliados</option>
-                        <option value="Dental Office">Dental Office</option>
-                        <option value="Dental Office - Maquininha">Dental Office - Maquininha</option>
-                    </select>
-
-                    <!-- SUBSOURCE INDIRECT CHANNEL MGM -->
-                    <label for="subsourceIndirectChannelMgm" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Tipo de Assinante</label>
-                    <select id="subsourceIndirectChannelMgm">
-                        <option value="">-- Selecione --</option>
-                        <option value="Assinantes">Assinantes</option>
-                        <option value="Não assinantes">Não assinantes</option>
-                    </select>
-
-                    <!-- SUBSOURCE MGM DETAILS -->
-                    <label for="subsourceMgmDetails" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Detalhe MGM</label>
-                    <select id="subsourceMgmDetails">
-                        <option value="">-- Selecione --</option>
-                        <option value="Produto">Produto</option>
+                        <option value="Clínica legado">Clínica legado</option>
                         <option value="CIOSP">CIOSP</option>
-                        <option value="Capim Conecta">Capim Conecta</option>
-                        <option value="In">In</option>
-                        <option value="High-touch">High-touch</option>
-                        <option value="Low-touch">Low-touch</option>
-                        <option value="Público Geral">Público Geral</option>
-                        <option value="Evento">Evento</option>
-                        <option value="Capiners (ex-vendas)">Capiners (ex-vendas)</option>
+                        <option value="CIOSP - QRCode">CIOSP - QRCode</option>
+                        <option value="Blog">Blog</option>
+                        <option value="Parceiro">Parceiro</option>
+                        <option value="Reabertura Lost">Reabertura Lost</option>
+                        <option value="Odonto Conference">Odonto Conference</option>
+                        <option value="Index">Index</option>
+                        <option value="Imersão das Clinicas Lucrativas">Imersão das Clinicas Lucrativas</option>
+                        <option value="Imersão DX">Imersão DX</option>
+                        <option value="CIOSP 2026">CIOSP 2026</option>
+                        <option value="Live">Live</option>
+                        <option value="Franquia Oral Centter">Franquia Oral Centter</option>
                     </select>
 
-                    <!-- ACQUISITION METHODS INDIRECT CHANNEL -->
-                    <label for="acquisitionMethodsIndirectChannel" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Método de Aquisição</label>
-                    <select id="acquisitionMethodsIndirectChannel">
+                    <!-- CAMPOS: INTERNAL SOURCE = INDICAÇÃO EXTERNA -->
+                    <div id="indicacaoExternaFields" style="display: none;">
+                        <!-- SUBSOURCE INDIRECT CHANNEL MGM -->
+                        <label for="subsourceIndirectChannelMgm" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Tipo de Assinante</label>
+                        <select id="subsourceIndirectChannelMgm">
+                            <option value="">-- Selecione --</option>
+                            <option value="Assinantes">Assinantes</option>
+                            <option value="Não assinantes">Não assinantes</option>
+                        </select>
+
+                        <!-- SUBSOURCE MGM DETAILS -->
+                        <label for="subsourceMgmDetails" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Detalhe MGM</label>
+                        <select id="subsourceMgmDetails">
+                            <option value="">-- Selecione --</option>
+                            <option value="Produto">Produto</option>
+                            <option value="CIOSP">CIOSP</option>
+                            <option value="Capim Conecta">Capim Conecta</option>
+                            <option value="In">In</option>
+                            <option value="High-touch">High-touch</option>
+                            <option value="Low-touch">Low-touch</option>
+                            <option value="Público Geral">Público Geral</option>
+                            <option value="Evento">Evento</option>
+                            <option value="Capiners (ex-vendas)">Capiners (ex-vendas)</option>
+                        </select>
+
+                        <!-- ACQUISITION METHODS INDIRECT CHANNEL -->
+                        <label for="acquisitionMethodsIndirectChannel" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Método de Aquisição</label>
+                        <select id="acquisitionMethodsIndirectChannel">
+                            <option value="">-- Selecione --</option>
+                            <option value="Indicação">Indicação</option>
+                            <option value="Evento">Evento</option>
+                            <option value="Landing-page">Landing-page</option>
+                            <option value="Lista-fria">Lista-fria</option>
+                            <option value="Formulário">Formulário</option>
+                            <option value="Link de indicação">Link de indicação</option>
+                            <option value="NPS">NPS</option>
+                            <option value="Userguiding">Userguiding</option>
+                            <option value="Formulário Interno">Formulário Interno</option>
+                            <option value="Treinamento CS">Treinamento CS</option>
+                            <option value="Blip">Blip</option>
+                            <option value="Disparo Manual">Disparo Manual</option>
+                            <option value="Mídia Paga">Mídia Paga</option>
+                            <option value="CIOSP">CIOSP</option>
+                            <option value="Capim Conecta">Capim Conecta</option>
+                            <option value="In">In</option>
+                            <option value="Slack">Slack</option>
+                        </select>
+                    </div>
+
+                    <!-- CAMPOS: INTERNAL SOURCE = PARCEIRO -->
+                    <div id="parceiroFields" style="display: none;">
+                        <!-- NOME DO PARCEIRO -->
+                        <label for="nomeDoParceiro" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Nome do Parceiro</label>
+                        <select id="nomeDoParceiro">
+                            <option value="">-- Selecione --</option>
+                            <option value="camillavalverde">Camilla Valverde</option>
+                            <option value="cliniflix">Cliniflix</option>
+                            <option value="dadorittes">Dado Rittes</option>
+                            <option value="fernandabaldassa">Fernanda Baldassa</option>
+                            <option value="gleiceoliveira">Gleice Oliveira</option>
+                            <option value="igorsteinmeyer">Igor Steinmeyer</option>
+                            <option value="jonathanmark">Jonathan Mark</option>
+                            <option value="jotadentista">Jota Dentista</option>
+                            <option value="lorranserrano">Lorran Serrano</option>
+                            <option value="marialaura">Maria Laura (Maju)</option>
+                            <option value="mentoriainvictus">Mentoria Invictus</option>
+                            <option value="nexus">Nexus</option>
+                            <option value="nãocomplica">Não Complica</option>
+                            <option value="odontomidia">Odonto Mídia</option>
+                            <option value="oxygen">Oxygen</option>
+                            <option value="polyanaoliveira">Polyana Oliveira</option>
+                            <option value="redeorto">RedeOrto</option>
+                            <option value="resultpay">Result Pay</option>
+                            <option value="rittesacademy">Rittes Academy</option>
+                            <option value="roberttasouza">Robertta Souza</option>
+                            <option value="ronald">Ronald</option>
+                            <option value="turmadobem">Turma do Bem</option>
+                            <option value="viníciusgamarra">Vinícius Gamarra</option>
+                            <option value="fernandalabiapari">Fernanda Labiapari</option>
+                            <option value="gustavotemístocles">Gustavo Temístocles</option>
+                            <option value="Lucas Secco">Lucas Secco</option>
+                            <option value="Arthur Zardo">Arthur Zardo</option>
+                            <option value="Lucas Jesus">Lucas Jesus</option>
+                            <option value="Victor Nastri">Victor Nastri</option>
+                        </select>
+
+                        <!-- CUPOM DO PARCEIRO -->
+                        <label for="cupomDoParceiro" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Cupom do Parceiro</label>
+                        <input type="text" id="cupomDoParceiro" placeholder="Digite o cupom do parceiro">
+                    </div>
+
+                    <!-- CAMPOS: INTERNAL SOURCE = EVENTOS -->
+                    <div id="eventoFields" style="display: none;">
+                        <!-- NOME DO EVENTO DE ORIGEM -->
+                        <label for="nomeDoEventoDeOrigem" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Nome do Evento de Origem</label>
+                        <select id="nomeDoEventoDeOrigem">
+                            <option value="">-- Selecione --</option>
+                            <option value="PrepConcept SP - Ago/23">PrepConcept SP - Ago/23</option>
+                            <option value="PrepConcept RJ - Ago/23">PrepConcept RJ - Ago/23</option>
+                            <option value="PrepConcept Vitória - Set/23">PrepConcept Vitória - Set/23</option>
+                            <option value="CIOSP - Jan/24">CIOSP - Jan/24</option>
+                            <option value="Sorriso do Bem - Nov/25">Sorriso do Bem - Nov/25</option>
+                        </select>
+                    </div>
+
+                    <!-- EQUIPE DO RESPONSÁVEL (sempre visível) -->
+                    <label for="equipeResponsavel" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Equipe do Responsável pelo Preenchimento do Formulário</label>
+                    <select id="equipeResponsavel">
                         <option value="">-- Selecione --</option>
+                        <option value="Vendas">Vendas</option>
+                        <option value="csm">CSM</option>
+                        <option value="Outras">Outras</option>
+                        <option value="Prospecção">Prospecção</option>
                         <option value="Indicação">Indicação</option>
-                        <option value="Evento">Evento</option>
-                        <option value="Landing-page">Landing-page</option>
-                        <option value="Lista-fria">Lista-fria</option>
-                        <option value="Formulário">Formulário</option>
-                        <option value="Link de indicação">Link de indicação</option>
-                        <option value="NPS">NPS</option>
-                        <option value="Userguiding">Userguiding</option>
-                        <option value="Formulário Interno">Formulário Interno</option>
-                        <option value="Treinamento CS">Treinamento CS</option>
-                        <option value="Blip">Blip</option>
-                        <option value="Disparo Manual">Disparo Manual</option>
-                        <option value="Mídia Paga">Mídia Paga</option>
-                        <option value="CIOSP">CIOSP</option>
-                        <option value="Capim Conecta">Capim Conecta</option>
-                        <option value="In">In</option>
-                        <option value="Slack">Slack</option>
+                        <option value="Maquininha">Maquininha</option>
+                        <option value="Assinatura + Maquininha">Assinatura + Maquininha</option>
+                    </select>
+
+                    <!-- MOTIVOS DE INTERESSE (sempre visível, múltipla escolha) -->
+                    <label style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Motivos de Interesse</label>
+                    <div class="owner-grid" id="motivosDeInteresseCheckboxes" style="max-height: none;">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="motivo-calendar" value="calendar">
+                            <label for="motivo-calendar">Agenda online</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="motivo-bnpl" value="bnpl">
+                            <label for="motivo-bnpl">Financiamento</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="motivo-clinic_management" value="clinic_management">
+                            <label for="motivo-clinic_management">Sistema de gestão de clínica</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="motivo-capim_point_of_sale" value="capim_point_of_sale">
+                            <label for="motivo-capim_point_of_sale">Maquininha</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="motivo-ai_assistant" value="ai_assistant">
+                            <label for="motivo-ai_assistant">Assistente AI</label>
+                        </div>
+                    </div>
+
+                    <!-- INTERESSE EM PARCERIA (sempre visível) -->
+                    <label for="interesseEmParceria" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Interesse em parceria?</label>
+                    <select id="interesseEmParceria">
+                        <option value="">-- Selecione --</option>
+                        <option value="true">Sim</option>
+                        <option value="false">Não</option>
                     </select>
                 </div>
 
@@ -777,6 +894,23 @@
 
         let currentMode = 'single';
 
+        // Toggle campos condicionais de acordo com o Internal Source
+        const internalSourceSelect = document.getElementById('internal_source');
+        const indicacaoExternaFields = document.getElementById('indicacaoExternaFields');
+        const parceiroFields = document.getElementById('parceiroFields');
+        const eventoFields = document.getElementById('eventoFields');
+
+        function updateConditionalFields() {
+            const value = internalSourceSelect.value;
+
+            indicacaoExternaFields.style.display = value === 'Indicação Externa' ? 'block' : 'none';
+            parceiroFields.style.display = value === 'Parceiro' ? 'block' : 'none';
+            eventoFields.style.display = value === 'Eventos' ? 'block' : 'none';
+        }
+
+        internalSourceSelect.addEventListener('change', updateConditionalFields);
+        updateConditionalFields();
+
         // Toggle modo
         toggleBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -803,11 +937,19 @@
             e.preventDefault();
             
             const phonesText = document.getElementById('phones').value.trim();
-            const origem = document.getElementById('origem').value;
+            const internalSource = document.getElementById('internal_source').value;
             const subsourceIndirectChannelMgm = document.getElementById('subsourceIndirectChannelMgm').value;
             const subsourceMgmDetails = document.getElementById('subsourceMgmDetails').value;
             const acquisitionMethodsIndirectChannel = document.getElementById('acquisitionMethodsIndirectChannel').value;
-            
+            const nomeDoParceiro = document.getElementById('nomeDoParceiro').value;
+            const cupomDoParceiro = document.getElementById('cupomDoParceiro').value;
+            const nomeDoEventoDeOrigem = document.getElementById('nomeDoEventoDeOrigem').value;
+            const equipeResponsavel = document.getElementById('equipeResponsavel').value;
+            const motivosDeInteresse = Array.from(
+                document.querySelectorAll('#motivosDeInteresseCheckboxes input[type="checkbox"]:checked')
+            ).map(cb => cb.value).join(';');
+            const interesseEmParceria = document.getElementById('interesseEmParceria').value;
+
             if (!phonesText) {
                 alert('Por favor, adicione pelo menos um telefone');
                 return;
@@ -888,10 +1030,16 @@
                             phone: phone,
                             email: email,
                             name: name,
-                            origem: origem || undefined,
+                            internal_source: internalSource || undefined,
                             subsourceIndirectChannelMgm: subsourceIndirectChannelMgm || undefined,
                             subsourceMgmDetails: subsourceMgmDetails || undefined,
                             acquisitionMethodsIndirectChannel: acquisitionMethodsIndirectChannel || undefined,
+                            nomeDoParceiro: nomeDoParceiro || undefined,
+                            cupomDoParceiro: cupomDoParceiro || undefined,
+                            nomeDoEventoDeOrigem: nomeDoEventoDeOrigem || undefined,
+                            equipeResponsavel: equipeResponsavel || undefined,
+                            motivosDeInteresse: motivosDeInteresse || undefined,
+                            interesseEmParceria: interesseEmParceria || undefined,
                             owner_id: owner
                         })
                     });
