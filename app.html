@@ -681,31 +681,16 @@
                         <h2>Informações Adicionais</h2>
                     </div>
 
-                    <!-- INTERNAL SOURCE (exibido como "Origem" no HTML; a propriedade no HubSpot continua sendo internal_source) -->
+                    <!-- INTERNAL SOURCE (exibido como "Origem" no HTML; a propriedade no HubSpot continua sendo internal_source).
+                         Mostra só 4 das opções reais da propriedade: Reativação Inbound, Eventos, Parceiro e Indicação Externa
+                         (essa última exibida como "MGM" só na interface — o value enviado ao HubSpot continua "Indicação Externa"). -->
                     <label for="internal_source" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Origem</label>
                     <select id="internal_source">
                         <option value="" selected>-- Selecione --</option>
-                        <option value="Instagram">Instagram</option>
-                        <option value="Facebook">Facebook</option>
-                        <option value="WhatsApp / Telefone Site">WhatsApp / Telefone Site</option>
-                        <option value="Indicação Interna">Indicação Interna</option>
                         <option value="Reativação Inbound">Reativação Inbound</option>
-                        <option value="Indicação Externa">Indicação Externa</option>
-                        <option value="Lista Outbound">Outbound</option>
                         <option value="Eventos">Eventos</option>
-                        <option value="Clínica legado">Clínica legado</option>
-                        <option value="CIOSP">CIOSP</option>
-                        <option value="CIOSP - QRCode">CIOSP - QRCode</option>
-                        <option value="Blog">Blog</option>
                         <option value="Parceiro">Parceiro</option>
-                        <option value="Reabertura Lost">Reabertura Lost</option>
-                        <option value="Odonto Conference">Odonto Conference</option>
-                        <option value="Index">Index</option>
-                        <option value="Imersão das Clinicas Lucrativas">Imersão das Clinicas Lucrativas</option>
-                        <option value="Imersão DX">Imersão DX</option>
-                        <option value="CIOSP 2026">CIOSP 2026</option>
-                        <option value="Live">Live</option>
-                        <option value="Franquia Oral Centter">Franquia Oral Centter</option>
+                        <option value="Indicação Externa">MGM</option>
                     </select>
 
                     <!-- CAMPOS: INTERNAL SOURCE = INDICAÇÃO EXTERNA -->
