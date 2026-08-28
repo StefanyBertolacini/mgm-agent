@@ -798,17 +798,13 @@
                         </select>
                     </div>
 
-                    <!-- EQUIPE DO RESPONSÁVEL (sempre visível) -->
-                    <label for="equipeResponsavel" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Equipe do Responsável pelo Preenchimento do Formulário</label>
+                    <!-- EQUIPE DO RESPONSÁVEL (exibido como "Pipeline" no HTML; a propriedade no HubSpot continua sendo
+                         equipe_do_responsavel_pelo_preenchimento_do_formulario). Mostra só 2 das opções reais da propriedade. -->
+                    <label for="equipeResponsavel" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Pipeline</label>
                     <select id="equipeResponsavel">
                         <option value="">-- Selecione --</option>
-                        <option value="Vendas">Vendas</option>
-                        <option value="csm">CSM</option>
-                        <option value="Outras">Outras</option>
-                        <option value="Prospecção">Prospecção</option>
-                        <option value="Indicação">Indicação</option>
                         <option value="Maquininha">Maquininha</option>
-                        <option value="Assinatura + Maquininha">Assinatura + Maquininha</option>
+                        <option value="Vendas">Vendas</option>
                     </select>
 
                     <!-- MOTIVOS DE INTERESSE (sempre visível, múltipla escolha) -->
