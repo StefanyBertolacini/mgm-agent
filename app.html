@@ -548,8 +548,8 @@
                         <span class="section-icon">📱</span>
                         <h2>Telefones</h2>
                     </div>
-                    <textarea id="phones" placeholder="Cole um telefone por linha:&#10;11 98765-4321 - joao@email.com - João Silva&#10;21 99999-8888 - Maria Silva&#10;85 98888-7777" required></textarea>
-                    <div class="section-help">Um telefone por linha. Opcionalmente coloque &quot; - Nome&quot; após o telefone.</div>
+                    <textarea id="phones" placeholder="Cole um telefone por linha:&#10;11 98765-4321 - João Silva - joao@email.com&#10;21 99999-8888 - Maria Silva&#10;85 98888-7777" required></textarea>
+                    <div class="section-help">Um telefone por linha. Opcionalmente coloque &quot; - Nome&quot; e/ou &quot; - email&quot; após o telefone, em qualquer ordem.</div>
                 </div>
                 
 
@@ -977,25 +977,19 @@
                     let name = '';
                     
                     if (phoneLine.includes(' - ')) {
-                        const parts = phoneLine.split(' - ').map(p => p.trim());
+                        const parts = phoneLine.split(' - ').map(p => p.trim()).filter(p => p.length > 0);
                         phone = parts[0] || '';
-                        
-                       if (parts.length === 3) {
-                        // numero - email - nome
-                        email = parts[1] || undefined;
-                        name = parts[2] || '';
-                    } else if (parts.length === 2) {
-                        // numero - ??? (email ou nome?)
-                        // // Se contém @, é email; senão é nome
-                        if (parts[1].includes('@')) {
-                            email = parts[1] || undefined;
-                            name = '';
-                        } else {
-                            name = parts[1] || '';
-                            email = undefined;
-                        }
+
+                        // Detecta e-mail e nome pelo conteúdo (quem tem "@" é e-mail),
+                        // não pela posição — assim funciona em qualquer ordem:
+                        // "telefone - Nome - email" ou "telefone - email - Nome"
+                        const rest = parts.slice(1);
+                        const emailPart = rest.find(p => p.includes('@'));
+                        const namePart = rest.find(p => !p.includes('@'));
+
+                        email = emailPart || undefined;
+                        name = namePart || '';
                     }
-                }
 
                     let owner;
                     if (currentMode === 'single') {
