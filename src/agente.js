@@ -358,6 +358,22 @@ async function updateContact(contactId, data) {
       };
     }
 
+    // Alguns workflows do HubSpot (ex: criação de deal do agente de canais indiretos)
+    // se inscrevem quando "[MGM] Indicação Recebida" passa a ser Verdadeiro. Se o contato
+    // já tinha essa propriedade true de uma indicação anterior, gravar true de novo não
+    // conta como mudança de valor pro HubSpot, e o workflow não reinscreve o contato.
+    // Por isso resetamos pra false primeiro, garantindo uma transição real false → true
+    // a cada nova indicação recebida por um contato já existente.
+    try {
+      await axios.patch(
+        `https://api.hubapi.com/crm/v3/objects/contacts/${contactId}`,
+        { properties: { contact_mgm_indicator_received: false } },
+        { headers: hubspotHeaders }
+      );
+    } catch (resetError) {
+      console.error('Erro ao resetar contact_mgm_indicator_received:', resetError.response?.data || resetError.message);
+    }
+
     const response = await axios.patch(
       `https://api.hubapi.com/crm/v3/objects/contacts/${contactId}`,
       { properties },
