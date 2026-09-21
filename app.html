@@ -740,6 +740,14 @@
                             <option value="In">In</option>
                             <option value="Slack">Slack</option>
                         </select>
+
+                        <!-- EVENTO EXPOIN (opcional, só quando internal_source = "Indicação Externa" / "MGM") -->
+                        <label for="eventoExpoIn" style="display: block; margin-top: 20px; font-weight: 600; color: var(--roxo-escuro); margin-bottom: 8px;">Evento ExpoIn?</label>
+                        <select id="eventoExpoIn">
+                            <option value="">-- Selecione --</option>
+                            <option value="true">Sim</option>
+                            <option value="false">Não</option>
+                        </select>
                     </div>
 
                     <!-- CAMPOS: INTERNAL SOURCE = PARCEIRO -->
@@ -925,6 +933,7 @@
             const nomeDoParceiro = document.getElementById('nomeDoParceiro').value;
             const cupomDoParceiro = document.getElementById('cupomDoParceiro').value;
             const nomeDoEventoDeOrigem = document.getElementById('nomeDoEventoDeOrigem').value;
+            const eventoExpoIn = document.getElementById('eventoExpoIn').value;
             const equipeResponsavel = document.getElementById('equipeResponsavel').value;
             const motivosDeInteresse = Array.from(
                 document.querySelectorAll('#motivosDeInteresseCheckboxes input[type="checkbox"]:checked')
@@ -1012,6 +1021,7 @@
                             nomeDoParceiro: nomeDoParceiro || undefined,
                             cupomDoParceiro: cupomDoParceiro || undefined,
                             nomeDoEventoDeOrigem: nomeDoEventoDeOrigem || undefined,
+                            eventoExpoIn: eventoExpoIn || undefined,
                             equipeResponsavel: equipeResponsavel || undefined,
                             motivosDeInteresse: motivosDeInteresse || undefined,
                             interesseEmParceria: interesseEmParceria || undefined,

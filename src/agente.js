@@ -154,6 +154,7 @@ async function createContact(data) {
     nomeDoParceiro,
     cupomDoParceiro,
     nomeDoEventoDeOrigem,
+    eventoExpoIn,
     equipeResponsavel,
     motivosDeInteresse,
     interesseEmParceria,
@@ -211,6 +212,11 @@ async function createContact(data) {
       properties.nome_do_evento_de_origem = nomeDoEventoDeOrigem;
     }
 
+    // Campo exibido quando internal_source = "Indicação Externa" (MGM)
+    if (eventoExpoIn) {
+      properties.contact__mgm_event_expoin = eventoExpoIn;
+    }
+
     // Campos fixos, exibidos independentemente da internal_source
     if (equipeResponsavel) {
       properties.equipe_do_responsavel_pelo_preenchimento_do_formulario = equipeResponsavel;
@@ -258,6 +264,7 @@ async function updateContact(contactId, data) {
     nomeDoParceiro,
     cupomDoParceiro,
     nomeDoEventoDeOrigem,
+    eventoExpoIn,
     equipeResponsavel,
     motivosDeInteresse,
     interesseEmParceria,
@@ -316,6 +323,11 @@ async function updateContact(contactId, data) {
     // Campo exibido quando internal_source = "Eventos"
     if (nomeDoEventoDeOrigem) {
       properties.nome_do_evento_de_origem = nomeDoEventoDeOrigem;
+    }
+
+    // Campo exibido quando internal_source = "Indicação Externa" (MGM)
+    if (eventoExpoIn) {
+      properties.contact__mgm_event_expoin = eventoExpoIn;
     }
 
     // Campos fixos, exibidos independentemente da internal_source
@@ -412,6 +424,7 @@ app.post('/api/mgm', async (req, res) => {
       nomeDoParceiro,
       cupomDoParceiro,
       nomeDoEventoDeOrigem,
+      eventoExpoIn,
       equipeResponsavel,
       motivosDeInteresse,
       interesseEmParceria,
@@ -450,6 +463,7 @@ app.post('/api/mgm', async (req, res) => {
       nomeDoParceiro,
       cupomDoParceiro,
       nomeDoEventoDeOrigem,
+      eventoExpoIn,
       equipeResponsavel,
       motivosDeInteresse,
       interesseEmParceria,
@@ -507,6 +521,7 @@ app.get('/api/mgm', async (req, res) => {
       nomeDoParceiro,
       cupomDoParceiro,
       nomeDoEventoDeOrigem,
+      eventoExpoIn,
       equipeResponsavel,
       motivosDeInteresse,
       interesseEmParceria,
@@ -545,6 +560,7 @@ app.get('/api/mgm', async (req, res) => {
       nomeDoParceiro,
       cupomDoParceiro,
       nomeDoEventoDeOrigem,
+      eventoExpoIn,
       equipeResponsavel,
       motivosDeInteresse,
       interesseEmParceria,
