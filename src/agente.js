@@ -151,7 +151,6 @@ async function createContact(data) {
     origem,
     subsourceIndirectChannelMgm,
     subsourceMgmDetails,
-    nomeDeQuemIndicou,
     emailDoIndicante,
     qualParceiro,
     tipoParceria,
@@ -202,10 +201,12 @@ async function createContact(data) {
 
     if (subsourceMgmDetails) {
       properties.contact_cross_subsource_mgm_details = subsourceMgmDetails;
-    }
 
-    if (nomeDeQuemIndicou) {
-      properties.nome_de_quem_indicou = nomeDeQuemIndicou;
+      // Quando quem indicou é o Vendedor, o mesmo nome selecionado também
+      // preenche o "[Auto] E-mail do vendedor" (contact_auto_sellers_email).
+      if (subsourceIndirectChannelMgm === 'Vendedor') {
+        properties.contact_auto_sellers_email = subsourceMgmDetails;
+      }
     }
 
     if (emailDoIndicante) {
@@ -274,7 +275,6 @@ async function updateContact(contactId, data) {
     origem,
     subsourceIndirectChannelMgm,
     subsourceMgmDetails,
-    nomeDeQuemIndicou,
     emailDoIndicante,
     qualParceiro,
     tipoParceria,
@@ -328,10 +328,12 @@ async function updateContact(contactId, data) {
 
     if (subsourceMgmDetails) {
       properties.contact_cross_subsource_mgm_details = subsourceMgmDetails;
-    }
 
-    if (nomeDeQuemIndicou) {
-      properties.nome_de_quem_indicou = nomeDeQuemIndicou;
+      // Quando quem indicou é o Vendedor, o mesmo nome selecionado também
+      // preenche o "[Auto] E-mail do vendedor" (contact_auto_sellers_email).
+      if (subsourceIndirectChannelMgm === 'Vendedor') {
+        properties.contact_auto_sellers_email = subsourceMgmDetails;
+      }
     }
 
     if (emailDoIndicante) {
@@ -463,7 +465,6 @@ app.post('/api/mgm', async (req, res) => {
       origem,
       subsourceIndirectChannelMgm,
       subsourceMgmDetails,
-      nomeDeQuemIndicou,
       emailDoIndicante,
       qualParceiro,
       tipoParceria,
@@ -504,7 +505,6 @@ app.post('/api/mgm', async (req, res) => {
       origem,
       subsourceIndirectChannelMgm,
       subsourceMgmDetails,
-      nomeDeQuemIndicou,
       emailDoIndicante,
       qualParceiro,
       tipoParceria,
@@ -564,7 +564,6 @@ app.get('/api/mgm', async (req, res) => {
       origem,
       subsourceIndirectChannelMgm,
       subsourceMgmDetails,
-      nomeDeQuemIndicou,
       emailDoIndicante,
       qualParceiro,
       tipoParceria,
@@ -605,7 +604,6 @@ app.get('/api/mgm', async (req, res) => {
       origem,
       subsourceIndirectChannelMgm,
       subsourceMgmDetails,
-      nomeDeQuemIndicou,
       emailDoIndicante,
       qualParceiro,
       tipoParceria,

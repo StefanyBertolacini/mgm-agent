@@ -963,16 +963,8 @@
             const nomeDoVendedor = document.getElementById('nomeDoVendedor').value;
             const nomeOuEmailIndicanteRaw = document.getElementById('nomeOuEmailIndicante').value.trim();
 
-            // Detecta e-mail x nome pelo conteúdo (quem tem "@" é e-mail), mesma lógica do parsing de telefone
-            let nomeDeQuemIndicou;
-            let emailDoIndicante;
-            if (nomeOuEmailIndicanteRaw) {
-                if (nomeOuEmailIndicanteRaw.includes('@')) {
-                    emailDoIndicante = nomeOuEmailIndicanteRaw;
-                } else {
-                    nomeDeQuemIndicou = nomeOuEmailIndicanteRaw;
-                }
-            }
+            // Seja nome ou e-mail do indicante, vai sempre para email_do_indicante
+            const emailDoIndicante = nomeOuEmailIndicanteRaw || undefined;
 
             const subsourceIndirectChannelMgm = quemIndicou;
             const subsourceMgmDetails = quemIndicou === 'Vendedor' ? nomeDoVendedor : undefined;
@@ -1075,7 +1067,6 @@
                             origem: origem || undefined,
                             subsourceIndirectChannelMgm: subsourceIndirectChannelMgm || undefined,
                             subsourceMgmDetails: subsourceMgmDetails || undefined,
-                            nomeDeQuemIndicou: nomeDeQuemIndicou || undefined,
                             emailDoIndicante: emailDoIndicante || undefined,
                             qualParceiro: qualParceiro || undefined,
                             tipoParceria: tipoParceria || undefined,
