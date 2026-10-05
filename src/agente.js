@@ -148,13 +148,15 @@ async function createContact(data) {
     email,
     name,
     internalSource,
+    origem,
     subsourceIndirectChannelMgm,
     subsourceMgmDetails,
-    acquisitionMethodsIndirectChannel,
-    nomeDoParceiro,
-    cupomDoParceiro,
-    nomeDoEventoDeOrigem,
-    eventoExpoIn,
+    nomeDeQuemIndicou,
+    emailDoIndicante,
+    qualParceiro,
+    tipoParceria,
+    qualEvento,
+    tipoEvento,
     equipeResponsavel,
     motivosDeInteresse,
     interesseEmParceria,
@@ -185,7 +187,15 @@ async function createContact(data) {
       properties.internal_source = internalSource;
     }
 
-    // Campos exibidos quando internal_source = "Indicação Externa"
+    // "origem" é derivada do internal_source (Indicação/Parcerias/Eventos) e enviada
+    // já pronta pelo front-end; não tem controle próprio na UI.
+    if (origem) {
+      properties.origem = origem;
+    }
+
+    // Campos exibidos quando internal_source = "Indicação Externa" (MGM):
+    // quem indicou (Vendedor / Assinantes / Não assinantes) e, a partir disso,
+    // o nome do vendedor OU o nome/e-mail do cliente que indicou.
     if (subsourceIndirectChannelMgm) {
       properties.contact_cross_subsource_indirect_chanel_mgm = subsourceIndirectChannelMgm;
     }
@@ -194,27 +204,30 @@ async function createContact(data) {
       properties.contact_cross_subsource_mgm_details = subsourceMgmDetails;
     }
 
-    if (acquisitionMethodsIndirectChannel) {
-      properties.contact_cross_acquisition_methods_indirect_chanel = acquisitionMethodsIndirectChannel;
+    if (nomeDeQuemIndicou) {
+      properties.nome_de_quem_indicou = nomeDeQuemIndicou;
+    }
+
+    if (emailDoIndicante) {
+      properties.email_do_indicante = emailDoIndicante;
     }
 
     // Campos exibidos quando internal_source = "Parceiro"
-    if (nomeDoParceiro) {
-      properties.parcerias__nome_do_parceiro = nomeDoParceiro;
+    if (qualParceiro) {
+      properties.contact_cross_subsource_partnership_details = qualParceiro;
     }
 
-    if (cupomDoParceiro) {
-      properties.cupom_do_parceiro = cupomDoParceiro;
+    if (tipoParceria) {
+      properties.contact_cross_subsource_indirect_chanel_partnership = tipoParceria;
     }
 
-    // Campo exibido quando internal_source = "Eventos"
-    if (nomeDoEventoDeOrigem) {
-      properties.nome_do_evento_de_origem = nomeDoEventoDeOrigem;
+    // Campos exibidos quando internal_source = "Eventos"
+    if (qualEvento) {
+      properties.contact_cross_subsource_events_details = qualEvento;
     }
 
-    // Campo exibido quando internal_source = "Indicação Externa" (MGM)
-    if (eventoExpoIn) {
-      properties.contact__mgm_event_expoin = eventoExpoIn;
+    if (tipoEvento) {
+      properties.contact_cross_subsource_indirect_chanel_events = tipoEvento;
     }
 
     // Campos fixos, exibidos independentemente da internal_source
@@ -258,13 +271,15 @@ async function updateContact(contactId, data) {
     email,
     name,
     internalSource,
+    origem,
     subsourceIndirectChannelMgm,
     subsourceMgmDetails,
-    acquisitionMethodsIndirectChannel,
-    nomeDoParceiro,
-    cupomDoParceiro,
-    nomeDoEventoDeOrigem,
-    eventoExpoIn,
+    nomeDeQuemIndicou,
+    emailDoIndicante,
+    qualParceiro,
+    tipoParceria,
+    qualEvento,
+    tipoEvento,
     equipeResponsavel,
     motivosDeInteresse,
     interesseEmParceria,
@@ -298,7 +313,15 @@ async function updateContact(contactId, data) {
       properties.internal_source = internalSource;
     }
 
-    // Campos exibidos quando internal_source = "Indicação Externa"
+    // "origem" é derivada do internal_source (Indicação/Parcerias/Eventos) e enviada
+    // já pronta pelo front-end; não tem controle próprio na UI.
+    if (origem) {
+      properties.origem = origem;
+    }
+
+    // Campos exibidos quando internal_source = "Indicação Externa" (MGM):
+    // quem indicou (Vendedor / Assinantes / Não assinantes) e, a partir disso,
+    // o nome do vendedor OU o nome/e-mail do cliente que indicou.
     if (subsourceIndirectChannelMgm) {
       properties.contact_cross_subsource_indirect_chanel_mgm = subsourceIndirectChannelMgm;
     }
@@ -307,27 +330,30 @@ async function updateContact(contactId, data) {
       properties.contact_cross_subsource_mgm_details = subsourceMgmDetails;
     }
 
-    if (acquisitionMethodsIndirectChannel) {
-      properties.contact_cross_acquisition_methods_indirect_chanel = acquisitionMethodsIndirectChannel;
+    if (nomeDeQuemIndicou) {
+      properties.nome_de_quem_indicou = nomeDeQuemIndicou;
+    }
+
+    if (emailDoIndicante) {
+      properties.email_do_indicante = emailDoIndicante;
     }
 
     // Campos exibidos quando internal_source = "Parceiro"
-    if (nomeDoParceiro) {
-      properties.parcerias__nome_do_parceiro = nomeDoParceiro;
+    if (qualParceiro) {
+      properties.contact_cross_subsource_partnership_details = qualParceiro;
     }
 
-    if (cupomDoParceiro) {
-      properties.cupom_do_parceiro = cupomDoParceiro;
+    if (tipoParceria) {
+      properties.contact_cross_subsource_indirect_chanel_partnership = tipoParceria;
     }
 
-    // Campo exibido quando internal_source = "Eventos"
-    if (nomeDoEventoDeOrigem) {
-      properties.nome_do_evento_de_origem = nomeDoEventoDeOrigem;
+    // Campos exibidos quando internal_source = "Eventos"
+    if (qualEvento) {
+      properties.contact_cross_subsource_events_details = qualEvento;
     }
 
-    // Campo exibido quando internal_source = "Indicação Externa" (MGM)
-    if (eventoExpoIn) {
-      properties.contact__mgm_event_expoin = eventoExpoIn;
+    if (tipoEvento) {
+      properties.contact_cross_subsource_indirect_chanel_events = tipoEvento;
     }
 
     // Campos fixos, exibidos independentemente da internal_source
@@ -434,13 +460,15 @@ app.post('/api/mgm', async (req, res) => {
       email,
       name,
       internal_source,
+      origem,
       subsourceIndirectChannelMgm,
       subsourceMgmDetails,
-      acquisitionMethodsIndirectChannel,
-      nomeDoParceiro,
-      cupomDoParceiro,
-      nomeDoEventoDeOrigem,
-      eventoExpoIn,
+      nomeDeQuemIndicou,
+      emailDoIndicante,
+      qualParceiro,
+      tipoParceria,
+      qualEvento,
+      tipoEvento,
       equipeResponsavel,
       motivosDeInteresse,
       interesseEmParceria,
@@ -473,13 +501,15 @@ app.post('/api/mgm', async (req, res) => {
       email,
       name,
       internalSource: internal_source,
+      origem,
       subsourceIndirectChannelMgm,
       subsourceMgmDetails,
-      acquisitionMethodsIndirectChannel,
-      nomeDoParceiro,
-      cupomDoParceiro,
-      nomeDoEventoDeOrigem,
-      eventoExpoIn,
+      nomeDeQuemIndicou,
+      emailDoIndicante,
+      qualParceiro,
+      tipoParceria,
+      qualEvento,
+      tipoEvento,
       equipeResponsavel,
       motivosDeInteresse,
       interesseEmParceria,
@@ -531,13 +561,15 @@ app.get('/api/mgm', async (req, res) => {
       email,
       name,
       internal_source,
+      origem,
       subsourceIndirectChannelMgm,
       subsourceMgmDetails,
-      acquisitionMethodsIndirectChannel,
-      nomeDoParceiro,
-      cupomDoParceiro,
-      nomeDoEventoDeOrigem,
-      eventoExpoIn,
+      nomeDeQuemIndicou,
+      emailDoIndicante,
+      qualParceiro,
+      tipoParceria,
+      qualEvento,
+      tipoEvento,
       equipeResponsavel,
       motivosDeInteresse,
       interesseEmParceria,
@@ -570,13 +602,15 @@ app.get('/api/mgm', async (req, res) => {
       email,
       name,
       internalSource: internal_source,
+      origem,
       subsourceIndirectChannelMgm,
       subsourceMgmDetails,
-      acquisitionMethodsIndirectChannel,
-      nomeDoParceiro,
-      cupomDoParceiro,
-      nomeDoEventoDeOrigem,
-      eventoExpoIn,
+      nomeDeQuemIndicou,
+      emailDoIndicante,
+      qualParceiro,
+      tipoParceria,
+      qualEvento,
+      tipoEvento,
       equipeResponsavel,
       motivosDeInteresse,
       interesseEmParceria,
