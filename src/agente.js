@@ -201,12 +201,6 @@ async function createContact(data) {
 
     if (subsourceMgmDetails) {
       properties.contact_cross_subsource_mgm_details = subsourceMgmDetails;
-
-      // Quando quem indicou é o Vendedor, o mesmo nome selecionado também
-      // preenche o "[Auto] E-mail do vendedor" (contact_auto_sellers_email).
-      if (subsourceIndirectChannelMgm === 'Vendedor') {
-        properties.contact_auto_sellers_email = subsourceMgmDetails;
-      }
     }
 
     if (emailDoIndicante) {
@@ -328,12 +322,6 @@ async function updateContact(contactId, data) {
 
     if (subsourceMgmDetails) {
       properties.contact_cross_subsource_mgm_details = subsourceMgmDetails;
-
-      // Quando quem indicou é o Vendedor, o mesmo nome selecionado também
-      // preenche o "[Auto] E-mail do vendedor" (contact_auto_sellers_email).
-      if (subsourceIndirectChannelMgm === 'Vendedor') {
-        properties.contact_auto_sellers_email = subsourceMgmDetails;
-      }
     }
 
     if (emailDoIndicante) {
